@@ -285,16 +285,48 @@ export async function getBuildingsForLandlord(landlordId: string): Promise<Build
   return (rows as BuildingRow[]).map(mapBuilding);
 }
 
+/** Returns the live total counts of buildings and landlords. */
+export async function getCounts(): Promise<{ buildings: number; landlords: number }> {
+  const [{ count: bCount }, { count: lCount }] = await Promise.all([
+    supabase.from("buildings").select("*", { count: "exact", head: true }),
+    supabase.from("landlords").select("*", { count: "exact", head: true }),
+  ]);
+  return { buildings: bCount ?? 0, landlords: lCount ?? 0 };
+}
+
 export async function searchAll(
   query: string
 ): Promise<{ buildings: SearchResult[]; landlords: SearchResult[] }> {
-  // Empty query → return everything
+  // Empty query → return a capped browse (1,000 buildings, all landlords)
   if (!query || query.trim().length < 2) {
-    const [bldgs, lords] = await Promise.all([getBuildings(), getLandlords()]);
-    return {
-      buildings: bldgs.map(toBuildingSearchResult),
-      landlords: lords.map(toLandlordSearchResult),
-    };
+    const [{ data: bldgRows }, lords] = await Promise.all([
+      supabase
+        .from("buildings")
+        .select("id,name,address,district,market,avg_rating,total_reviews,statutory_orders(status)")
+        .order("name")
+        .limit(1000),
+      getLandlords(),
+    ]);
+    type BrowseRow = { id: string; name: string; address: string; district: string; market: string; avg_rating: number; total_reviews: number; statutory_orders: { status: string }[] };
+    const buildings: SearchResult[] = (bldgRows ?? []).map(
+      (b: BrowseRow) => ({
+        type: "building" as const,
+        id: b.id,
+        name: b.name,
+        address: b.address,
+        district: b.district,
+        market: b.market,
+        rating: Number(b.avg_rating),
+        reviewCount: b.total_reviews,
+        badge: (b.statutory_orders ?? []).some((o) => o.status === "Outstanding")
+          ? "Orders on Record"
+          : Number(b.avg_rating) >= 4.2
+          ? "Top Rated"
+          : undefined,
+        govDataAvailable: true,
+      })
+    );
+    return { buildings, landlords: lords.map(toLandlordSearchResult) };
   }
 
   // Split query into words (min 2 chars each) for forgiving word-by-word matching

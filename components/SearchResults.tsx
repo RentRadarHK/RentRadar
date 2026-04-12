@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Building2, User, Star, AlertTriangle, ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
-import { searchAll } from "@/lib/supabase/queries";
+import { searchAll, getCounts } from "@/lib/supabase/queries";
 import { SearchResult } from "@/lib/data/types";
 import GovDataBadge from "./GovDataBadge";
 
@@ -175,12 +175,18 @@ export default function SearchResults() {
   const [loading, setLoading] = useState(true);
   const [allBuildings, setAllBuildings] = useState<SearchResult[]>([]);
   const [allLandlords, setAllLandlords] = useState<SearchResult[]>([]);
+  const [totalCounts, setTotalCounts] = useState<{ buildings: number; landlords: number } | null>(null);
 
   function handleSearch() {
     const trimmed = inputQ.trim();
     if (trimmed) router.push(`/search?q=${encodeURIComponent(trimmed)}`);
     else router.push("/search");
   }
+
+  // Fetch live totals once on mount
+  useEffect(() => {
+    getCounts().then(setTotalCounts);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -254,7 +260,12 @@ export default function SearchResults() {
                 Browse all listings
               </h1>
               <p className="text-sm text-[#6B7280]">
-                {loading ? "Loading…" : `${allBuildings.length + allLandlords.length} buildings and landlords in Hong Kong`}
+                {totalCounts
+                  ? `${totalCounts.buildings.toLocaleString()} buildings and ${totalCounts.landlords.toLocaleString()} landlord${totalCounts.landlords !== 1 ? "s" : ""} in Hong Kong`
+                  : "Loading…"}
+              </p>
+              <p className="text-xs mt-1" style={{ color: "#9CA3AF" }}>
+                Search above to find a specific building or landlord
               </p>
             </>
           )}
