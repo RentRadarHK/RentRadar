@@ -30,7 +30,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes
+  // Protected routes — redirect unauthenticated users to /signup.
+  // NOTE: /review is intentionally PUBLIC. Auth only happens client-side
+  // at submission time when the user selects Google sign-in.
   const { pathname } = request.nextUrl;
   const protectedPaths = ["/account"];
   const isProtected = protectedPaths.some(
