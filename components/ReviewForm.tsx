@@ -24,7 +24,8 @@ import { unifiedSearch } from "@/lib/data/search";
 import { getBuildingById } from "@/lib/data/buildings";
 import { getLandlordById } from "@/lib/data/landlords";
 import { SearchResult } from "@/lib/data/types";
-import { submitReview } from "@/lib/supabase/queries";
+import { useAuth } from "@/lib/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -414,6 +415,7 @@ function SuccessState({
 
 export default function ReviewForm() {
   const searchParams = useSearchParams();
+  const { user } = useAuth();
 
   // Step
   const [step, setStep] = useState<Step>(1);
@@ -451,6 +453,7 @@ export default function ReviewForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ── Prefill from query params ──────────────────────────────────────────────
 
@@ -539,52 +542,77 @@ export default function ReviewForm() {
   async function handleSubmit() {
     if (!selectedProperty) return;
     setIsSubmitting(true);
+    setSubmitError(null);
 
-    let landlordId = "";
-    let buildingId = "";
+    try {
+      // ── Google verification: trigger OAuth if not signed in ────────────────
+      if (verifyMethod === "google" && !user) {
+        const supabase = createClient();
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: `${window.location.origin}/review` },
+        });
+        // Page will reload after OAuth — stop here
+        return;
+      }
 
-    if (selectedProperty.type === "building") {
-      buildingId = selectedProperty.id;
-      const b = getBuildingById(selectedProperty.id);
-      landlordId = b?.landlords[0] ?? "";
-    } else {
-      landlordId = selectedProperty.id;
-      const l = getLandlordById(selectedProperty.id);
-      buildingId = l?.properties[0] ?? "";
-    }
+      const buildingId =
+        selectedProperty.type === "building" ? selectedProperty.id : undefined;
+      const landlordId =
+        selectedProperty.type === "landlord" ? selectedProperty.id : undefined;
 
-    const words = reviewBody.trim().split(/\s+/);
-    const headline =
-      words.slice(0, 8).join(" ") + (words.length > 8 ? "..." : "");
+      // ── Document: encode to base64 for transport ───────────────────────────
+      let document_base64: string | undefined;
+      let document_mime: string | undefined;
+      let document_filename: string | undefined;
 
-    // Minimum 1.5s loading UX
-    await new Promise((r) => setTimeout(r, 1500));
+      if (verifyMethod === "document" && docFile) {
+        const buf = await docFile.arrayBuffer();
+        document_base64 = Buffer.from(buf).toString("base64");
+        document_mime = docFile.type;
+        document_filename = docFile.name;
+      }
 
-    const result = await submitReview({
-      landlordId,
-      buildingId,
-      flatRef: "",
-      rating: overallRating,
-      headline,
-      body: reviewBody,
-      verifiedTenant: verifyMethod === "document",
-      district: selectedProperty.district,
-      market: selectedProperty.market,
-      dimensions: {
-        depositReturn,
-        responsiveness,
-        listingAccuracy,
-        maintenance,
-        renewalFairness: overallRating,
-      },
-    });
+      // Minimum 1.5 s loading UX
+      await new Promise((r) => setTimeout(r, 1500));
 
-    setIsSubmitting(false);
+      const res = await fetch("/api/reviews/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          building_id:           buildingId,
+          landlord_id:           landlordId,
+          tenancy_from:          fromYear !== "" ? Number(fromYear) : undefined,
+          tenancy_to:            toYear === "current" || toYear === "" ? undefined : Number(toYear),
+          currently_renting:     toYear === "current" || stillRenting === true,
+          rental_method:         rentMethod,
+          rating_overall:        overallRating,
+          rating_deposit:        depositReturn,
+          rating_accuracy:       listingAccuracy,
+          rating_maintenance:    maintenance,
+          rating_responsiveness: responsiveness,
+          review_text:           reviewBody,
+          monthly_rent:          monthlyRent ? Number(monthlyRent) : undefined,
+          flat_size_sqft:        flatSize ? Number(flatSize) : undefined,
+          verification_method:   verifyMethod,
+          verification_email:    verifyEmail || undefined,
+          document_base64,
+          document_mime,
+          document_filename,
+        }),
+      });
 
-    if (result.success) {
-      setSubmitted(true);
-    } else {
-      setToast(result.error ?? "Something went wrong. Please try again.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSubmitError(data.error ?? "Something went wrong. Please try again.");
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
+      setSubmitError("Network error. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -1290,7 +1318,7 @@ export default function ReviewForm() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-semibold" style={{ color: "#555555" }}>
-                                Sign in with Google
+                                {user ? "Signed in with Google" : "Sign in with Google"}
                               </span>
                               <span
                                 className="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -1299,8 +1327,10 @@ export default function ReviewForm() {
                                 Recommended
                               </span>
                             </div>
-                            <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
-                              Your name is never shown — only &quot;Verified Tenant&quot; appears
+                            <p className="text-xs mt-0.5" style={{ color: user ? "#4D8B6F" : "#9CA3AF" }}>
+                              {user
+                                ? `✓ ${user.email}`
+                                : "Your name is never shown — only \"Verified Tenant\" appears"}
                             </p>
                           </div>
                           {verifyMethod === "google" && (
@@ -1473,6 +1503,13 @@ export default function ReviewForm() {
                         )}
                       </button>
                     </div>
+
+                    {/* Inline submit error */}
+                    {submitError && (
+                      <p className="mt-3 text-xs text-center" style={{ color: "#A83820" }}>
+                        {submitError}
+                      </p>
+                    )}
                   </div>
                 </motion.div>
               )}
