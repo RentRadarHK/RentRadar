@@ -29,28 +29,34 @@ export default function CTASection() {
           aria-hidden="true"
           style={{
             background:
-              "radial-gradient(ellipse at center, rgba(0,194,255,0.06) 0%, transparent 70%)",
+              "radial-gradient(ellipse at center, rgba(77,139,111,0.08) 0%, transparent 70%)",
           }}
         />
 
         <h2 className="text-3xl sm:text-5xl font-black text-white leading-tight mb-4">
           Had a bad landlord experience?
         </h2>
-        <p className="text-[#8b9cc8] text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+        <p className="text-white/70 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
           Your review could save someone else from the same mistake.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
             href="#"
-            className="btn-accent flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm"
+            className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold text-white transition-colors"
+            style={{ background: "#4D8B6F" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#3A7059")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#4D8B6F")}
           >
             <PenLine size={16} />
             Write a Review
           </a>
           <a
             href="#search"
-            className="btn-outline flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm"
+            className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold transition-colors"
+            style={{ border: "1.5px solid rgba(255,255,255,0.5)", color: "white" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
             <Search size={16} />
             Search First

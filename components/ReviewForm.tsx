@@ -1411,7 +1411,7 @@ export default function ReviewForm() {
                               className="flex flex-col items-center gap-2 p-5 rounded-[10px] cursor-pointer transition-colors"
                               style={{
                                 border: "1.5px dashed #B0D4C3",
-                                background: "#F8FDF9",
+                                background: "#F5F0E8",
                               }}
                               onClick={(e) => e.stopPropagation()}
                             >

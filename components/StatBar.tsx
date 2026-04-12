@@ -29,22 +29,21 @@ export default function StatBar() {
     >
       <div className="max-w-5xl mx-auto">
         <div
-          className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/5 rounded-2xl overflow-hidden"
+          className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/10 rounded-2xl overflow-hidden"
           style={{
-            background:
-              "linear-gradient(135deg, rgba(0,194,255,0.06) 0%, rgba(13,21,38,0.8) 100%)",
-            border: "1px solid rgba(0,194,255,0.1)",
+            background: "#555555",
+            border: "1px solid rgba(255,255,255,0.12)",
           }}
         >
           {stats.map(({ value, label }) => (
             <div
               key={label}
-              className="flex flex-col items-center justify-center py-10 px-8 text-center group hover:bg-[#00c2ff]/5 transition-colors duration-200"
+              className="flex flex-col items-center justify-center py-10 px-8 text-center group hover:bg-white/5 transition-colors duration-200"
             >
               <span className="text-4xl sm:text-5xl font-black text-white mb-2 tabular-nums">
                 {value}
               </span>
-              <span className="text-[#8b9cc8] text-sm font-medium leading-snug max-w-[140px]">
+              <span className="text-white/70 text-sm font-medium leading-snug max-w-[140px]">
                 {label}
               </span>
             </div>

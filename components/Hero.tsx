@@ -100,8 +100,7 @@ export default function Hero() {
             className="text-[52px] sm:text-[64px] md:text-[72px] font-extrabold leading-[1.04] tracking-tight mb-6"
             style={{ color: "#555555" }}
           >
-            Know your rental.<br />
-            <span style={{ color: "#4D8B6F" }}>Before you sign.</span>
+            Don&apos;t rent blind.
           </motion.h1>
 
           {/* Subheadline */}
