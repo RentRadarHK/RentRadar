@@ -1,0 +1,1489 @@
+﻿"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  Building2,
+  User,
+  MapPin,
+  Shield,
+  Star,
+  Lock,
+  Check,
+  AlertCircle,
+  Upload,
+  Mail,
+  X,
+  ChevronRight,
+  RotateCcw,
+} from "lucide-react";
+import Link from "next/link";
+import { unifiedSearch } from "@/lib/data/search";
+import { getBuildingById } from "@/lib/data/buildings";
+import { getLandlordById } from "@/lib/data/landlords";
+import { SearchResult } from "@/lib/data/types";
+import { submitReview } from "@/lib/supabase/queries";
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+const YEARS = Array.from({ length: 12 }, (_, i) => 2026 - i);
+const STAR_LABELS = ["", "Very poor", "Poor", "Average", "Good", "Excellent"];
+
+type Step = 1 | 2 | 3 | 4;
+type VerifyMethod = "google" | "email" | "document" | null;
+type RentMethod = "direct" | "agent" | "corporate" | null;
+
+interface SelectedProperty {
+  type: "building" | "landlord";
+  id: string;
+  name: string;
+  address?: string;
+  district: string;
+  market: string;
+  rating: number;
+  reviewCount: number;
+  badge?: string;
+}
+
+// ── Star Picker ───────────────────────────────────────────────────────────────
+
+function StarPicker({
+  value,
+  onChange,
+  size = 22,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  size?: number;
+}) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <motion.button
+          key={i}
+          type="button"
+          whileTap={{ scale: 1.35 }}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          onClick={() => onChange(i)}
+          onMouseEnter={() => setHover(i)}
+          onMouseLeave={() => setHover(0)}
+          className="focus:outline-none"
+        >
+          <Star
+            size={size}
+            className={
+              i <= (hover || value)
+                ? "text-[#F59E0B] fill-[#F59E0B]"
+                : "text-[#D8D8D8] fill-[#D8D8D8]"
+            }
+          />
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
+// ── Progress Bar ──────────────────────────────────────────────────────────────
+
+function ProgressBar({ step }: { step: Step }) {
+  const steps = [
+    { n: 1, label: "Property" },
+    { n: 2, label: "Tenancy" },
+    { n: 3, label: "Ratings" },
+    { n: 4, label: "Story" },
+  ];
+
+  return (
+    <div className="flex items-center gap-0">
+      {steps.map((s, idx) => {
+        const done = step > s.n;
+        const active = step === s.n;
+        return (
+          <div key={s.n} className="flex items-center flex-1 last:flex-none">
+            {/* Dot */}
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className="relative flex items-center justify-center rounded-full transition-all duration-300"
+                style={{
+                  width: 32,
+                  height: 32,
+                  background: done || active ? "#555555" : "#E2D9CE",
+                  boxShadow: active ? "0 0 0 4px #E4F0EB" : "none",
+                }}
+              >
+                {done ? (
+                  <Check size={14} className="text-white" />
+                ) : (
+                  <span
+                    className="text-xs font-bold"
+                    style={{ color: active ? "#fff" : "#9CA3AF" }}
+                  >
+                    {s.n}
+                  </span>
+                )}
+              </div>
+              <span
+                className="text-[10px] font-semibold hidden sm:block"
+                style={{ color: active || done ? "#555555" : "#9CA3AF" }}
+              >
+                {s.label}
+              </span>
+            </div>
+            {/* Connector line */}
+            {idx < steps.length - 1 && (
+              <div
+                className="flex-1 h-[2px] mx-1 rounded-full overflow-hidden"
+                style={{ background: "#E2D9CE", marginBottom: "18px" }}
+              >
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: "#555555" }}
+                  initial={{ width: "0%" }}
+                  animate={{ width: step > s.n ? "100%" : "0%" }}
+                  transition={{ duration: 0.45, ease: EASE }}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+function Toast({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 5000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 40 }}
+      transition={{ duration: 0.35, ease: EASE }}
+      className="fixed bottom-6 left-1/2 z-50 flex items-center gap-3 px-5 py-3.5 rounded-[14px] shadow-lg"
+      style={{
+        transform: "translateX(-50%)",
+        background: "#555555",
+        color: "#fff",
+        maxWidth: "90vw",
+      }}
+    >
+      <AlertCircle size={16} className="shrink-0 text-red-400" />
+      <span className="text-sm font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2">
+        <X size={14} className="text-white/60 hover:text-white" />
+      </button>
+    </motion.div>
+  );
+}
+
+// ── Context Panel ─────────────────────────────────────────────────────────────
+
+function ContextPanel({ selectedProperty }: { selectedProperty: SelectedProperty | null }) {
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: "#555555" }}
+          >
+            <Star size={14} className="text-white fill-white" />
+          </div>
+          <span className="font-extrabold text-sm" style={{ color: "#555555" }}>
+            RentRadar
+          </span>
+        </div>
+        <h1 className="text-2xl font-extrabold" style={{ color: "#555555" }}>
+          Write a Review
+        </h1>
+        <p className="text-sm mt-1" style={{ color: "#6B7280" }}>
+          Help future tenants make better decisions.
+        </p>
+      </div>
+
+      {/* Selected property card */}
+      <AnimatePresence>
+        {selectedProperty && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="rounded-[16px] bg-white p-5"
+            style={{ border: "0.5px solid #E2D9CE" }}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "#E4F0EB" }}
+              >
+                {selectedProperty.type === "building" ? (
+                  <Building2 size={18} style={{ color: "#555555" }} />
+                ) : (
+                  <User size={18} style={{ color: "#555555" }} />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-[15px] leading-snug" style={{ color: "#555555" }}>
+                  {selectedProperty.name}
+                </p>
+                {selectedProperty.address && (
+                  <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "#6B7280" }}>
+                    <MapPin size={10} />
+                    {selectedProperty.address}
+                  </p>
+                )}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star
+                        key={i}
+                        size={11}
+                        className={
+                          i <= Math.round(selectedProperty.rating)
+                            ? "text-[#F59E0B] fill-[#F59E0B]"
+                            : "text-[#D8D8D8] fill-[#D8D8D8]"
+                        }
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold" style={{ color: "#555555" }}>
+                    {selectedProperty.rating.toFixed(1)}
+                  </span>
+                  <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                    · {selectedProperty.reviewCount} reviews
+                  </span>
+                  {selectedProperty.badge && (
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: "#E4F0EB", color: "#1F5C42" }}
+                    >
+                      {selectedProperty.badge}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Why your review matters */}
+      <div
+        className="rounded-[16px] bg-white p-5"
+        style={{ border: "0.5px solid #E2D9CE" }}
+      >
+        <h3 className="font-bold text-sm mb-4" style={{ color: "#555555" }}>
+          Why your review matters
+        </h3>
+        <div className="flex flex-col gap-4">
+          {[
+            {
+              icon: <Shield size={16} style={{ color: "#555555" }} />,
+              text: "Protects future tenants from bad experiences",
+            },
+            {
+              icon: <Star size={16} style={{ color: "#555555" }} />,
+              text: "Rewards good landlords with visibility",
+            },
+            {
+              icon: <Lock size={16} style={{ color: "#4D8B6F" }} />,
+              text: "Your identity is never shown publicly",
+            },
+          ].map(({ icon, text }) => (
+            <div key={text} className="flex items-start gap-3">
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: "#E4F0EB" }}
+              >
+                {icon}
+              </div>
+              <p className="text-sm leading-snug pt-0.5" style={{ color: "#6B7280" }}>
+                {text}
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs mt-4 pt-4 border-t" style={{ borderColor: "#F0EDE8", color: "#9CA3AF" }}>
+          Reviews are moderated within 24 hours
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Success State ─────────────────────────────────────────────────────────────
+
+function SuccessState({
+  selectedProperty,
+  docVerified,
+  onReset,
+}: {
+  selectedProperty: SelectedProperty | null;
+  docVerified: boolean;
+  onReset: () => void;
+}) {
+  const profileHref = selectedProperty
+    ? `/${selectedProperty.type}/${selectedProperty.id}`
+    : "/search";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, ease: EASE }}
+      className="flex flex-col items-center text-center py-16 px-6"
+    >
+      {/* Animated circle + checkmark */}
+      <div className="relative mb-8">
+        <motion.div
+          className="w-20 h-20 rounded-full flex items-center justify-center"
+          style={{ background: "#E4F0EB" }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+        >
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <motion.path
+              d="M10 21 L17 28 L30 13"
+              stroke="#555555"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: 0.35 }}
+            />
+          </svg>
+        </motion.div>
+      </div>
+
+      <h2 className="text-xl font-extrabold mb-3" style={{ color: "#555555" }}>
+        Review submitted
+      </h2>
+      <p className="text-sm max-w-sm leading-relaxed mb-6" style={{ color: "#6B7280" }}>
+        Thank you. Your experience will help protect the next tenant. It will appear on the profile
+        within 24 hours after our quick moderation check.
+      </p>
+
+      {docVerified && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.4, ease: EASE }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full mb-6 text-sm font-semibold"
+          style={{ background: "#E4F0EB", color: "#1F5C42" }}
+        >
+          <Check size={14} />
+          Verified Tenant badge applied
+        </motion.div>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+        <Link
+          href={profileHref}
+          className="flex-1 text-center py-3 rounded-[12px] text-sm font-semibold border transition-colors"
+          style={{ borderColor: "#555555", color: "#555555" }}
+        >
+          View the profile
+        </Link>
+        <button
+          onClick={onReset}
+          className="flex-1 py-3 rounded-[12px] text-sm font-semibold transition-colors"
+          style={{ color: "#6B7280" }}
+        >
+          Write another review
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
+export default function ReviewForm() {
+  const searchParams = useSearchParams();
+
+  // Step
+  const [step, setStep] = useState<Step>(1);
+
+  // Step 1 — property search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<SelectedProperty | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Step 2 — tenancy
+  const [fromYear, setFromYear] = useState<number | "">( "");
+  const [toYear, setToYear] = useState<number | "current" | "">("current");
+  const [rentMethod, setRentMethod] = useState<RentMethod>(null);
+  const [stillRenting, setStillRenting] = useState<boolean | null>(null);
+
+  // Step 3 — ratings
+  const [overallRating, setOverallRating] = useState(0);
+  const [depositReturn, setDepositReturn] = useState(0);
+  const [listingAccuracy, setListingAccuracy] = useState(0);
+  const [maintenance, setMaintenance] = useState(0);
+  const [responsiveness, setResponsiveness] = useState(0);
+
+  // Step 4 — story + verify
+  const [reviewBody, setReviewBody] = useState("");
+  const [monthlyRent, setMonthlyRent] = useState("");
+  const [flatSize, setFlatSize] = useState("");
+  const [confirmChecked, setConfirmChecked] = useState(false);
+  const [verifyMethod, setVerifyMethod] = useState<VerifyMethod>(null);
+  const [verifyEmail, setVerifyEmail] = useState("");
+  const [docFile, setDocFile] = useState<File | null>(null);
+
+  // Submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  // ── Prefill from query params ──────────────────────────────────────────────
+
+  useEffect(() => {
+    const buildingId = searchParams?.get("building");
+    const landlordId = searchParams?.get("landlord");
+
+    if (buildingId) {
+      const b = getBuildingById(buildingId);
+      if (b) {
+        setSelectedProperty({
+          type: "building",
+          id: b.id,
+          name: b.name,
+          address: b.address,
+          district: b.district,
+          market: b.market,
+          rating: b.avgRating,
+          reviewCount: b.totalReviews,
+        });
+      }
+    } else if (landlordId) {
+      const l = getLandlordById(landlordId);
+      if (l) {
+        setSelectedProperty({
+          type: "landlord",
+          id: l.id,
+          name: l.name,
+          address: undefined,
+          district: l.activeMarkets[0] ?? "Hong Kong",
+          market: l.activeMarkets[0] ?? "Hong Kong",
+          rating: l.avgRating,
+          reviewCount: l.totalReviews,
+          badge: l.verified ? "Verified" : undefined,
+        });
+      }
+    }
+  }, [searchParams]);
+
+  // ── Search ─────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (searchQuery.length >= 3) {
+      const results = unifiedSearch(searchQuery);
+      setSearchResults(results);
+      setShowDropdown(results.length > 0);
+    } else {
+      setSearchResults([]);
+      setShowDropdown(false);
+    }
+  }, [searchQuery]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function selectProperty(r: SearchResult) {
+    setSelectedProperty({
+      type: r.type,
+      id: r.id,
+      name: r.name,
+      address: r.address,
+      district: r.district,
+      market: r.market,
+      rating: r.rating,
+      reviewCount: r.reviewCount,
+      badge: r.badge,
+    });
+    setSearchQuery("");
+    setShowDropdown(false);
+  }
+
+  // ── Word count ─────────────────────────────────────────────────────────────
+
+  const wordCount = reviewBody.trim() === "" ? 0 : reviewBody.trim().split(/\s+/).length;
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
+
+  async function handleSubmit() {
+    if (!selectedProperty) return;
+    setIsSubmitting(true);
+
+    let landlordId = "";
+    let buildingId = "";
+
+    if (selectedProperty.type === "building") {
+      buildingId = selectedProperty.id;
+      const b = getBuildingById(selectedProperty.id);
+      landlordId = b?.landlords[0] ?? "";
+    } else {
+      landlordId = selectedProperty.id;
+      const l = getLandlordById(selectedProperty.id);
+      buildingId = l?.properties[0] ?? "";
+    }
+
+    const words = reviewBody.trim().split(/\s+/);
+    const headline =
+      words.slice(0, 8).join(" ") + (words.length > 8 ? "..." : "");
+
+    // Minimum 1.5s loading UX
+    await new Promise((r) => setTimeout(r, 1500));
+
+    const result = await submitReview({
+      landlordId,
+      buildingId,
+      flatRef: "",
+      rating: overallRating,
+      headline,
+      body: reviewBody,
+      verifiedTenant: verifyMethod === "document",
+      district: selectedProperty.district,
+      market: selectedProperty.market,
+      dimensions: {
+        depositReturn,
+        responsiveness,
+        listingAccuracy,
+        maintenance,
+        renewalFairness: overallRating,
+      },
+    });
+
+    setIsSubmitting(false);
+
+    if (result.success) {
+      setSubmitted(true);
+    } else {
+      setToast(result.error ?? "Something went wrong. Please try again.");
+    }
+  }
+
+  function resetForm() {
+    setStep(1);
+    setSelectedProperty(null);
+    setSearchQuery("");
+    setFromYear("");
+    setToYear("current");
+    setRentMethod(null);
+    setStillRenting(null);
+    setOverallRating(0);
+    setDepositReturn(0);
+    setListingAccuracy(0);
+    setMaintenance(0);
+    setResponsiveness(0);
+    setReviewBody("");
+    setMonthlyRent("");
+    setFlatSize("");
+    setConfirmChecked(false);
+    setVerifyMethod(null);
+    setVerifyEmail("");
+    setDocFile(null);
+    setSubmitted(false);
+  }
+
+  // ── Step validations ───────────────────────────────────────────────────────
+
+  const step1Valid = selectedProperty !== null;
+  const step2Valid =
+    fromYear !== "" &&
+    toYear !== "" &&
+    rentMethod !== null &&
+    stillRenting !== null;
+  const step3Valid =
+    overallRating > 0 &&
+    depositReturn > 0 &&
+    listingAccuracy > 0 &&
+    maintenance > 0 &&
+    responsiveness > 0;
+  const step4Valid =
+    wordCount >= 50 &&
+    confirmChecked &&
+    verifyMethod !== null &&
+    (verifyMethod !== "email" || verifyEmail.trim().length > 0);
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  if (submitted) {
+    return (
+      <div style={{ background: "#F5F0E8", minHeight: "100vh" }}>
+        <div className="max-w-xl mx-auto px-4 py-12">
+          <SuccessState
+            selectedProperty={selectedProperty}
+            docVerified={verifyMethod === "document" && docFile !== null}
+            onReset={resetForm}
+          />
+        </div>
+        <AnimatePresence>
+          {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#F5F0E8", minHeight: "100vh" }}>
+      <div className="max-w-6xl mx-auto px-4 py-10 sm:py-14">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+
+          {/* ── Left: context panel ── */}
+          <div className="w-full lg:w-[40%] lg:sticky lg:top-[88px]">
+            <ContextPanel selectedProperty={selectedProperty} />
+          </div>
+
+          {/* ── Right: form ── */}
+          <div className="w-full lg:w-[60%]">
+            {/* Progress bar */}
+            <div
+              className="bg-white rounded-[16px] p-5 mb-6"
+              style={{ border: "0.5px solid #E2D9CE" }}
+            >
+              <ProgressBar step={step} />
+            </div>
+
+            {/* Step content */}
+            <AnimatePresence mode="wait">
+              {step === 1 && (
+                <motion.div
+                  key="step1"
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -24 }}
+                  transition={{ duration: 0.35, ease: EASE }}
+                >
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <h2 className="text-xl font-extrabold mb-1" style={{ color: "#555555" }}>
+                      Which property are you reviewing?
+                    </h2>
+                    <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
+                      Search by building name, landlord, or address.
+                    </p>
+
+                    {/* Search input */}
+                    {!selectedProperty && (
+                      <div ref={searchRef} className="relative mb-4">
+                        <div
+                          className="flex items-center gap-3 px-4 py-3.5 rounded-full transition-all"
+                          style={{
+                            background: "#F5F0E8",
+                            border: "1.5px solid #E2D9CE",
+                          }}
+                        >
+                          <Search size={17} style={{ color: "#9CA3AF" }} className="shrink-0" />
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
+                            placeholder="e.g. Harbour View Tower, Pacific Realty Holdings..."
+                            className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#9CA3AF]"
+                            style={{ color: "#555555" }}
+                          />
+                          {searchQuery && (
+                            <button onClick={() => { setSearchQuery(""); setShowDropdown(false); }}>
+                              <X size={14} style={{ color: "#9CA3AF" }} />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Dropdown */}
+                        <AnimatePresence>
+                          {showDropdown && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 6 }}
+                              transition={{ duration: 0.2, ease: EASE }}
+                              className="absolute top-full left-0 right-0 mt-2 bg-white rounded-[16px] overflow-hidden z-20"
+                              style={{
+                                border: "0.5px solid #E2D9CE",
+                                boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
+                              }}
+                            >
+                              {searchResults.map((r) => (
+                                <button
+                                  key={r.id}
+                                  type="button"
+                                  onClick={() => selectProperty(r)}
+                                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-[#F5F0E8]"
+                                >
+                                  <div
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                    style={{ background: "#E4F0EB" }}
+                                  >
+                                    {r.type === "building" ? (
+                                      <Building2 size={15} style={{ color: "#555555" }} />
+                                    ) : (
+                                      <User size={15} style={{ color: "#555555" }} />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-semibold truncate" style={{ color: "#555555" }}>
+                                      {r.name}
+                                    </p>
+                                    <p className="text-xs truncate" style={{ color: "#9CA3AF" }}>
+                                      {r.address ?? r.district} · {r.market}
+                                    </p>
+                                  </div>
+                                  {r.badge && (
+                                    <span
+                                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                                      style={{ background: "#E4F0EB", color: "#1F5C42" }}
+                                    >
+                                      {r.badge}
+                                    </span>
+                                  )}
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+
+                    {/* Selection confirmation */}
+                    {selectedProperty && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, ease: EASE }}
+                        className="rounded-[14px] p-4 mb-4"
+                        style={{ background: "#E4F0EB", border: "1px solid #B0D4C3" }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: "#E4F0EB" }}
+                          >
+                            {selectedProperty.type === "building" ? (
+                              <Building2 size={17} style={{ color: "#555555" }} />
+                            ) : (
+                              <User size={17} style={{ color: "#555555" }} />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm" style={{ color: "#555555" }}>
+                              {selectedProperty.name}
+                            </p>
+                            {selectedProperty.address && (
+                              <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: "#4D8B6F" }}>
+                                <MapPin size={10} />
+                                {selectedProperty.address}
+                              </p>
+                            )}
+                          </div>
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+                            style={{ background: "#555555" }}
+                          >
+                            <Check size={12} className="text-white" />
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setSelectedProperty(null)}
+                          className="text-xs mt-3 flex items-center gap-1 transition-colors"
+                          style={{ color: "#4D8B6F" }}
+                        >
+                          <RotateCcw size={10} />
+                          Wrong property? Search again
+                        </button>
+                      </motion.div>
+                    )}
+
+                    <button
+                      onClick={() => setStep(2)}
+                      disabled={!step1Valid}
+                      className="w-full py-3.5 rounded-[12px] font-semibold text-sm flex items-center justify-center gap-2 transition-all mt-2"
+                      style={{
+                        background: step1Valid ? "#4D8B6F" : "#E2D9CE",
+                        color: step1Valid ? "#fff" : "#9CA3AF",
+                        cursor: step1Valid ? "pointer" : "not-allowed",
+                      }}
+                    >
+                      Continue
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 2 && (
+                <motion.div
+                  key="step2"
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -24 }}
+                  transition={{ duration: 0.35, ease: EASE }}
+                >
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <h2 className="text-xl font-extrabold mb-1" style={{ color: "#555555" }}>
+                      Tell us about your tenancy
+                    </h2>
+                    <p className="text-sm mb-7" style={{ color: "#6B7280" }}>
+                      Quick questions — no typing yet.
+                    </p>
+
+                    {/* Q1: Tenancy years */}
+                    <div className="mb-6">
+                      <p className="text-sm font-semibold mb-3" style={{ color: "#555555" }}>
+                        When did you rent there?
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <select
+                          value={fromYear}
+                          onChange={(e) => setFromYear(e.target.value === "" ? "" : parseInt(e.target.value))}
+                          className="flex-1 px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                          style={{
+                            background: "#F5F0E8",
+                            border: "1px solid #E2D9CE",
+                            color: fromYear === "" ? "#9CA3AF" : "#555555",
+                          }}
+                        >
+                          <option value="">From year</option>
+                          {YEARS.map((y) => (
+                            <option key={y} value={y}>
+                              {y}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="text-sm" style={{ color: "#9CA3AF" }}>—</span>
+                        <select
+                          value={toYear}
+                          onChange={(e) =>
+                            setToYear(
+                              e.target.value === "current"
+                                ? "current"
+                                : e.target.value === ""
+                                ? ""
+                                : parseInt(e.target.value)
+                            )
+                          }
+                          className="flex-1 px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                          style={{
+                            background: "#F5F0E8",
+                            border: "1px solid #E2D9CE",
+                            color: "#555555",
+                          }}
+                        >
+                          <option value="">To year</option>
+                          <option value="current">Currently renting</option>
+                          {YEARS.map((y) => (
+                            <option key={y} value={y}>
+                              {y}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Q2: How did you rent */}
+                    <div className="mb-6">
+                      <p className="text-sm font-semibold mb-3" style={{ color: "#555555" }}>
+                        How did you rent?
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {(
+                          [
+                            { value: "direct", label: "Direct with landlord" },
+                            { value: "agent", label: "Through an estate agent" },
+                            { value: "corporate", label: "Corporate / company relocation" },
+                          ] as { value: RentMethod; label: string }[]
+                        ).map(({ value, label }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setRentMethod(value)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-[12px] text-sm font-medium text-left transition-all"
+                            style={{
+                              background: rentMethod === value ? "#E4F0EB" : "#F5F0E8",
+                              border: `1.5px solid ${rentMethod === value ? "#555555" : "#E2D9CE"}`,
+                              color: rentMethod === value ? "#555555" : "#6B7280",
+                            }}
+                          >
+                            <div
+                              className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
+                              style={{
+                                borderColor: rentMethod === value ? "#555555" : "#D8D8D8",
+                              }}
+                            >
+                              {rentMethod === value && (
+                                <div
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ background: "#555555" }}
+                                />
+                              )}
+                            </div>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Q3: Still renting */}
+                    <div className="mb-8">
+                      <p className="text-sm font-semibold mb-3" style={{ color: "#555555" }}>
+                        Are you still renting there?
+                      </p>
+                      <div
+                        className="flex rounded-full p-0.5 w-fit"
+                        style={{ background: "#F5F0E8", border: "1px solid #E2D9CE" }}
+                      >
+                        {(
+                          [
+                            { value: true, label: "Yes" },
+                            { value: false, label: "No" },
+                          ] as { value: boolean; label: string }[]
+                        ).map(({ value, label }) => (
+                          <button
+                            key={label}
+                            type="button"
+                            onClick={() => setStillRenting(value)}
+                            className="px-6 py-2 rounded-full text-sm font-semibold transition-all"
+                            style={{
+                              background: stillRenting === value ? "#555555" : "transparent",
+                              color: stillRenting === value ? "#fff" : "#6B7280",
+                            }}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setStep(1)}
+                        className="px-5 py-3.5 rounded-[12px] text-sm font-semibold transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          color: "#6B7280",
+                          border: "1px solid #E2D9CE",
+                        }}
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={() => setStep(3)}
+                        disabled={!step2Valid}
+                        className="flex-1 py-3.5 rounded-[12px] font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+                        style={{
+                          background: step2Valid ? "#4D8B6F" : "#E2D9CE",
+                          color: step2Valid ? "#fff" : "#9CA3AF",
+                          cursor: step2Valid ? "pointer" : "not-allowed",
+                        }}
+                      >
+                        Continue
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 3 && (
+                <motion.div
+                  key="step3"
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -24 }}
+                  transition={{ duration: 0.35, ease: EASE }}
+                >
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <h2 className="text-xl font-extrabold mb-1" style={{ color: "#555555" }}>
+                      Rate your experience
+                    </h2>
+                    <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
+                      Start with your overall feeling, then rate each area.
+                    </p>
+
+                    {/* Overall rating */}
+                    <div
+                      className="rounded-[14px] p-5 mb-6"
+                      style={{
+                        background: "#E4F0EB",
+                        border: "1.5px solid #555555",
+                      }}
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#4D8B6F" }}>
+                        Overall rating
+                      </p>
+                      <div className="flex items-center gap-4">
+                        <StarPicker value={overallRating} onChange={setOverallRating} size={32} />
+                        {overallRating > 0 && (
+                          <motion.span
+                            key={overallRating}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-sm font-bold"
+                            style={{ color: "#555555" }}
+                          >
+                            {STAR_LABELS[overallRating]}
+                          </motion.span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Category ratings */}
+                    <div className="flex flex-col gap-4">
+                      {(
+                        [
+                          { label: "Deposit return", value: depositReturn, onChange: setDepositReturn },
+                          { label: "Listing accuracy / property quality", value: listingAccuracy, onChange: setListingAccuracy },
+                          { label: "Maintenance", value: maintenance, onChange: setMaintenance },
+                          { label: "Responsiveness", value: responsiveness, onChange: setResponsiveness },
+                        ]
+                      ).map(({ label, value, onChange }) => (
+                        <div key={label} className="flex items-center gap-3">
+                          <span className="text-sm flex-1 min-w-0" style={{ color: "#6B7280" }}>
+                            {label}
+                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <StarPicker value={value} onChange={onChange} size={22} />
+                            {value > 0 && (
+                              <motion.span
+                                key={value}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.15 }}
+                                className="text-xs font-bold w-7 text-right"
+                                style={{ color: "#4D8B6F" }}
+                              >
+                                {value}/5
+                              </motion.span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-3 mt-8">
+                      <button
+                        onClick={() => setStep(2)}
+                        className="px-5 py-3.5 rounded-[12px] text-sm font-semibold transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          color: "#6B7280",
+                          border: "1px solid #E2D9CE",
+                        }}
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={() => setStep(4)}
+                        disabled={!step3Valid}
+                        className="flex-1 py-3.5 rounded-[12px] font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+                        style={{
+                          background: step3Valid ? "#4D8B6F" : "#E2D9CE",
+                          color: step3Valid ? "#fff" : "#9CA3AF",
+                          cursor: step3Valid ? "pointer" : "not-allowed",
+                        }}
+                      >
+                        Continue
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 4 && (
+                <motion.div
+                  key="step4"
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -24 }}
+                  transition={{ duration: 0.35, ease: EASE }}
+                  className="flex flex-col gap-5"
+                >
+                  {/* Card A: Your experience */}
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <h2 className="text-xl font-extrabold mb-1" style={{ color: "#555555" }}>
+                      What should the next tenant know?
+                    </h2>
+                    <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
+                      Be specific about what happened — dates, amounts, how issues were handled.
+                      The more detail, the more helpful.
+                    </p>
+
+                    {/* Textarea */}
+                    <div className="relative mb-2">
+                      <textarea
+                        value={reviewBody}
+                        onChange={(e) => setReviewBody(e.target.value)}
+                        placeholder="Share your experience as a tenant..."
+                        rows={6}
+                        maxLength={3000}
+                        className="w-full px-4 py-3.5 rounded-[12px] text-sm resize-none outline-none transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1.5px solid #E2D9CE",
+                          color: "#555555",
+                          lineHeight: "1.6",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
+                    </div>
+                    <div className="flex justify-end mb-5">
+                      <motion.span
+                        className="flex items-center gap-1.5 text-xs font-semibold"
+                        style={{ color: wordCount >= 50 ? "#555555" : "#9CA3AF" }}
+                        animate={{ color: wordCount >= 50 ? "#555555" : "#9CA3AF" }}
+                      >
+                        {wordCount >= 50 && <Check size={12} />}
+                        {wordCount} / 50 words minimum
+                      </motion.span>
+                    </div>
+
+                    {/* Optional fields */}
+                    <div className="flex gap-3 mb-5">
+                      <div className="flex-1">
+                        <label className="text-xs font-semibold block mb-1.5" style={{ color: "#6B7280" }}>
+                          Monthly rent paid (HKD)
+                        </label>
+                        <input
+                          type="number"
+                          value={monthlyRent}
+                          onChange={(e) => setMonthlyRent(e.target.value)}
+                          placeholder="e.g. 18000"
+                          className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                          style={{
+                            background: "#F5F0E8",
+                            border: "1px solid #E2D9CE",
+                            color: "#555555",
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-xs font-semibold block mb-1.5" style={{ color: "#6B7280" }}>
+                          Flat size (sqft, saleable)
+                        </label>
+                        <input
+                          type="number"
+                          value={flatSize}
+                          onChange={(e) => setFlatSize(e.target.value)}
+                          placeholder="e.g. 450"
+                          className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                          style={{
+                            background: "#F5F0E8",
+                            border: "1px solid #E2D9CE",
+                            color: "#555555",
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs mb-5" style={{ color: "#9CA3AF" }}>
+                      Optional — helps others compare value
+                    </p>
+
+                    {/* Confirm checkbox */}
+                    <button
+                      type="button"
+                      onClick={() => setConfirmChecked(!confirmChecked)}
+                      className="flex items-start gap-3 text-left w-full"
+                    >
+                      <div
+                        className="w-5 h-5 rounded-[5px] border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all"
+                        style={{
+                          background: confirmChecked ? "#555555" : "transparent",
+                          borderColor: confirmChecked ? "#555555" : "#D8D8D8",
+                        }}
+                      >
+                        {confirmChecked && <Check size={11} className="text-white" />}
+                      </div>
+                      <span className="text-xs leading-relaxed" style={{ color: "#6B7280" }}>
+                        I confirm this review is based on my genuine personal experience and does
+                        not contain false statements.
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Card B: Verify identity */}
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <h2 className="text-lg font-extrabold mb-1" style={{ color: "#555555" }}>
+                      One last step — verify it&apos;s you
+                    </h2>
+                    <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
+                      Your identity is never shown publicly.
+                    </p>
+
+                    <div className="flex flex-col gap-3">
+                      {/* Google */}
+                      <button
+                        type="button"
+                        onClick={() => setVerifyMethod("google")}
+                        className="rounded-[14px] p-4 text-left transition-all"
+                        style={{
+                          border: `1.5px solid ${verifyMethod === "google" ? "#555555" : "#E2D9CE"}`,
+                          background: verifyMethod === "google" ? "#E4F0EB" : "#fff",
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: "#fff", border: "1px solid #E2D9CE" }}
+                          >
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                              <path
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                fill="#4285F4"
+                              />
+                              <path
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                fill="#34A853"
+                              />
+                              <path
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                fill="#FBBC05"
+                              />
+                              <path
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                fill="#EA4335"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-semibold" style={{ color: "#555555" }}>
+                                Sign in with Google
+                              </span>
+                              <span
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: "#555555", color: "#fff" }}
+                              >
+                                Recommended
+                              </span>
+                            </div>
+                            <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                              Your name is never shown — only &quot;Verified Tenant&quot; appears
+                            </p>
+                          </div>
+                          {verifyMethod === "google" && (
+                            <Check size={16} style={{ color: "#555555" }} className="shrink-0" />
+                          )}
+                        </div>
+                      </button>
+
+                      {/* Email */}
+                      <button
+                        type="button"
+                        onClick={() => setVerifyMethod("email")}
+                        className="rounded-[14px] p-4 text-left transition-all"
+                        style={{
+                          border: `1.5px solid ${verifyMethod === "email" ? "#555555" : "#E2D9CE"}`,
+                          background: verifyMethod === "email" ? "#E4F0EB" : "#fff",
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: "#F5F0E8" }}
+                          >
+                            <Mail size={17} style={{ color: "#555555" }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-semibold" style={{ color: "#555555" }}>
+                              Email verification
+                            </span>
+                            <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                              We send a one-click link. Takes 60 seconds.
+                            </p>
+                          </div>
+                          {verifyMethod === "email" && (
+                            <Check size={16} style={{ color: "#555555" }} className="shrink-0" />
+                          )}
+                        </div>
+                        {verifyMethod === "email" && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            transition={{ duration: 0.25, ease: EASE }}
+                            className="mt-3 overflow-hidden"
+                          >
+                            <input
+                              type="email"
+                              value={verifyEmail}
+                              onChange={(e) => setVerifyEmail(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              placeholder="your@email.com"
+                              className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                              style={{
+                                background: "#fff",
+                                border: "1.5px solid #E4F0EB",
+                                color: "#555555",
+                              }}
+                            />
+                          </motion.div>
+                        )}
+                      </button>
+
+                      {/* Document */}
+                      <button
+                        type="button"
+                        onClick={() => setVerifyMethod("document")}
+                        className="rounded-[14px] p-4 text-left transition-all"
+                        style={{
+                          border: `1.5px solid ${verifyMethod === "document" ? "#555555" : "#E2D9CE"}`,
+                          background: verifyMethod === "document" ? "#E4F0EB" : "#fff",
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: "#F5F0E8" }}
+                          >
+                            <Upload size={17} style={{ color: "#555555" }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-semibold" style={{ color: "#555555" }}>
+                                Upload a document
+                              </span>
+                              <span
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: "#E4F0EB", color: "#1F5C42" }}
+                              >
+                                ✓ Verified Tenant badge
+                              </span>
+                            </div>
+                            <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                              Utility bill, bank statement, or tenancy agreement. Deleted after
+                              verification.
+                            </p>
+                          </div>
+                          {verifyMethod === "document" && (
+                            <Check size={16} style={{ color: "#555555" }} className="shrink-0" />
+                          )}
+                        </div>
+                        {verifyMethod === "document" && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            transition={{ duration: 0.25, ease: EASE }}
+                            className="mt-3 overflow-hidden"
+                          >
+                            <label
+                              className="flex flex-col items-center gap-2 p-5 rounded-[10px] cursor-pointer transition-colors"
+                              style={{
+                                border: "1.5px dashed #B0D4C3",
+                                background: "#F8FDF9",
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Upload size={20} style={{ color: "#4D8B6F" }} />
+                              <span className="text-xs text-center" style={{ color: "#4D8B6F" }}>
+                                {docFile
+                                  ? docFile.name
+                                  : "Click to upload — PDF, JPG, PNG · max 5MB"}
+                              </span>
+                              <input
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f && f.size <= 5 * 1024 * 1024) setDocFile(f);
+                                  else if (f) setToast("File must be under 5MB");
+                                }}
+                              />
+                            </label>
+                          </motion.div>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setStep(3)}
+                        className="px-5 py-3.5 rounded-[12px] text-sm font-semibold transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          color: "#6B7280",
+                          border: "1px solid #E2D9CE",
+                        }}
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!step4Valid || isSubmitting}
+                        className="flex-1 py-3.5 rounded-[12px] font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+                        style={{
+                          background: step4Valid && !isSubmitting ? "#4D8B6F" : "#E2D9CE",
+                          color: step4Valid && !isSubmitting ? "#fff" : "#9CA3AF",
+                          cursor: step4Valid && !isSubmitting ? "pointer" : "not-allowed",
+                        }}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                              className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                            />
+                            Submitting...
+                          </>
+                        ) : (
+                          "Post my review"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+      </AnimatePresence>
+    </div>
+  );
+}
