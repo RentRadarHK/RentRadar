@@ -7,6 +7,13 @@ const footerLinks = {
   Support: ["Help Centre", "Contact Us", "FAQ", "Report an Issue"],
 };
 
+const footerHrefs: Record<string, string> = {
+  Search: "/search",
+  "Write a Review": "/review",
+  About: "/about",
+  "How it works": "/how-it-works",
+};
+
 export default function Footer() {
   return (
     <footer className="bg-[#F5F0E8] border-t border-[#E2D9CE] pt-16 pb-10 px-5 sm:px-8">
@@ -34,7 +41,7 @@ export default function Footer() {
                   {links.map((link) => (
                     <li key={link}>
                       <a
-                        href="#"
+                        href={footerHrefs[link] ?? "#"}
                         className="text-sm text-[#9CA3AF] hover:text-[#555555] transition-colors duration-150"
                       >
                         {link}

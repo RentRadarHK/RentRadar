@@ -42,7 +42,7 @@ export default function CTASection() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href="#"
+            href="/review"
             className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold text-white transition-colors"
             style={{ background: "#4D8B6F" }}
             onMouseEnter={(e) => (e.currentTarget.style.background = "#3A7059")}
