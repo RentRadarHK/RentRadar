@@ -20,10 +20,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
-import { unifiedSearch } from "@/lib/data/search";
-import { getBuildingById } from "@/lib/data/buildings";
-import { getLandlordById } from "@/lib/data/landlords";
 import { SearchResult } from "@/lib/data/types";
+import { searchAll, getBuilding, getLandlord } from "@/lib/supabase/queries";
 import { useAuth } from "@/lib/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 
@@ -32,6 +30,7 @@ import { createClient } from "@/lib/supabase/client";
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 const YEARS = Array.from({ length: 12 }, (_, i) => 2026 - i);
 const STAR_LABELS = ["", "Very poor", "Poor", "Average", "Good", "Excellent"];
+const REVIEW_DRAFT_KEY = "rr_review_draft";
 
 type Step = 1 | 2 | 3 | 4;
 type VerifyMethod = "google" | "email" | "document" | null;
@@ -462,48 +461,55 @@ export default function ReviewForm() {
     const landlordId = searchParams?.get("landlord");
 
     if (buildingId) {
-      const b = getBuildingById(buildingId);
-      if (b) {
-        setSelectedProperty({
-          type: "building",
-          id: b.id,
-          name: b.name,
-          address: b.address,
-          district: b.district,
-          market: b.market,
-          rating: b.avgRating,
-          reviewCount: b.totalReviews,
-        });
-      }
+      getBuilding(buildingId).then((b) => {
+        if (b) {
+          setSelectedProperty({
+            type: "building",
+            id: b.id,
+            name: b.name,
+            address: b.address,
+            district: b.district,
+            market: b.market,
+            rating: b.avgRating,
+            reviewCount: b.totalReviews,
+          });
+        }
+      });
     } else if (landlordId) {
-      const l = getLandlordById(landlordId);
-      if (l) {
-        setSelectedProperty({
-          type: "landlord",
-          id: l.id,
-          name: l.name,
-          address: undefined,
-          district: l.activeMarkets[0] ?? "Hong Kong",
-          market: l.activeMarkets[0] ?? "Hong Kong",
-          rating: l.avgRating,
-          reviewCount: l.totalReviews,
-          badge: l.verified ? "Verified" : undefined,
-        });
-      }
+      getLandlord(landlordId).then((l) => {
+        if (l) {
+          setSelectedProperty({
+            type: "landlord",
+            id: l.id,
+            name: l.name,
+            address: undefined,
+            district: l.activeMarkets[0] ?? "Hong Kong",
+            market: l.activeMarkets[0] ?? "Hong Kong",
+            rating: l.avgRating,
+            reviewCount: l.totalReviews,
+            badge: l.verified ? "Verified" : undefined,
+          });
+        }
+      });
     }
   }, [searchParams]);
 
   // ── Search ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (searchQuery.length >= 3) {
-      const results = unifiedSearch(searchQuery);
-      setSearchResults(results);
-      setShowDropdown(results.length > 0);
-    } else {
+    if (searchQuery.length < 2) {
       setSearchResults([]);
       setShowDropdown(false);
+      return;
     }
+    let cancelled = false;
+    searchAll(searchQuery).then(({ buildings, landlords }) => {
+      if (cancelled) return;
+      const combined: SearchResult[] = [...buildings, ...landlords].slice(0, 10);
+      setSearchResults(combined);
+      setShowDropdown(combined.length > 0);
+    });
+    return () => { cancelled = true; };
   }, [searchQuery]);
 
   // Close dropdown on outside click
@@ -516,6 +522,38 @@ export default function ReviewForm() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  // ── Restore draft after Google OAuth return ────────────────────────────────
+
+  useEffect(() => {
+    if (!user) return;
+    const raw = sessionStorage.getItem(REVIEW_DRAFT_KEY);
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      if (draft.selectedProperty) setSelectedProperty(draft.selectedProperty);
+      if (draft.fromYear !== undefined) setFromYear(draft.fromYear);
+      if (draft.toYear !== undefined) setToYear(draft.toYear);
+      if (draft.rentMethod !== undefined) setRentMethod(draft.rentMethod);
+      if (draft.stillRenting !== undefined) setStillRenting(draft.stillRenting);
+      if (draft.overallRating) setOverallRating(draft.overallRating);
+      if (draft.depositReturn) setDepositReturn(draft.depositReturn);
+      if (draft.listingAccuracy) setListingAccuracy(draft.listingAccuracy);
+      if (draft.maintenance) setMaintenance(draft.maintenance);
+      if (draft.responsiveness) setResponsiveness(draft.responsiveness);
+      if (draft.reviewBody) setReviewBody(draft.reviewBody);
+      if (draft.monthlyRent) setMonthlyRent(draft.monthlyRent);
+      if (draft.flatSize) setFlatSize(draft.flatSize);
+      if (draft.confirmChecked) setConfirmChecked(draft.confirmChecked);
+      if (draft.verifyMethod) setVerifyMethod(draft.verifyMethod);
+      if (draft.verifyEmail) setVerifyEmail(draft.verifyEmail);
+      setStep(4);
+    } catch {
+      // malformed draft — ignore
+    } finally {
+      sessionStorage.removeItem(REVIEW_DRAFT_KEY);
+    }
+  }, [user]);
 
   function selectProperty(r: SearchResult) {
     setSelectedProperty({
@@ -547,6 +585,7 @@ export default function ReviewForm() {
     try {
       // ── Google verification: trigger OAuth if not signed in ────────────────
       if (verifyMethod === "google" && !user) {
+        saveDraftState();
         const supabase = createClient();
         await supabase.auth.signInWithOAuth({
           provider: "google",
@@ -616,7 +655,29 @@ export default function ReviewForm() {
     }
   }
 
+  function saveDraftState() {
+    sessionStorage.setItem(REVIEW_DRAFT_KEY, JSON.stringify({
+      selectedProperty,
+      fromYear,
+      toYear,
+      rentMethod,
+      stillRenting,
+      overallRating,
+      depositReturn,
+      listingAccuracy,
+      maintenance,
+      responsiveness,
+      reviewBody,
+      monthlyRent,
+      flatSize,
+      confirmChecked,
+      verifyMethod,
+      verifyEmail,
+    }));
+  }
+
   async function handleGoogleSignIn() {
+    saveDraftState();
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",

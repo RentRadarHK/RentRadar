@@ -38,3 +38,5 @@ googl 0Auth credentials.txt
 
 # Claude Code
 .claude/settings.local.json
+
+.vercel
