@@ -434,10 +434,19 @@ export default function ReviewForm() {
 
   // Step 3 — ratings
   const [overallRating, setOverallRating] = useState(0);
-  const [depositReturn, setDepositReturn] = useState(0);
-  const [listingAccuracy, setListingAccuracy] = useState(0);
-  const [maintenance, setMaintenance] = useState(0);
-  const [responsiveness, setResponsiveness] = useState(0);
+  // Building ratings
+  const [ratingMaintenance, setRatingMaintenance] = useState(0);
+  const [ratingCleanliness, setRatingCleanliness] = useState(0);
+  const [ratingPestControl, setRatingPestControl] = useState(0);
+  const [ratingNoise, setRatingNoise] = useState(0);
+  const [ratingFacilities, setRatingFacilities] = useState(0);
+  const [ratingBuildingMgmt, setRatingBuildingMgmt] = useState(0);
+  // Landlord ratings
+  const [ratingDepositReturn, setRatingDepositReturn] = useState(0);
+  const [ratingListingAccuracy, setRatingListingAccuracy] = useState(0);
+  const [ratingLandlordResponsiveness, setRatingLandlordResponsiveness] = useState(0);
+  const [ratingFlatRepairs, setRatingFlatRepairs] = useState(0);
+  const [ratingWouldRentAgain, setRatingWouldRentAgain] = useState(0);
 
   // Step 4 — story + verify
   const [reviewBody, setReviewBody] = useState("");
@@ -546,10 +555,17 @@ export default function ReviewForm() {
       if (draft.rentMethod !== undefined) setRentMethod(draft.rentMethod);
       if (draft.stillRenting !== undefined) setStillRenting(draft.stillRenting);
       if (draft.overallRating) setOverallRating(draft.overallRating);
-      if (draft.depositReturn) setDepositReturn(draft.depositReturn);
-      if (draft.listingAccuracy) setListingAccuracy(draft.listingAccuracy);
-      if (draft.maintenance) setMaintenance(draft.maintenance);
-      if (draft.responsiveness) setResponsiveness(draft.responsiveness);
+      if (draft.ratingMaintenance) setRatingMaintenance(draft.ratingMaintenance);
+      if (draft.ratingCleanliness) setRatingCleanliness(draft.ratingCleanliness);
+      if (draft.ratingPestControl) setRatingPestControl(draft.ratingPestControl);
+      if (draft.ratingNoise) setRatingNoise(draft.ratingNoise);
+      if (draft.ratingFacilities) setRatingFacilities(draft.ratingFacilities);
+      if (draft.ratingBuildingMgmt) setRatingBuildingMgmt(draft.ratingBuildingMgmt);
+      if (draft.ratingDepositReturn) setRatingDepositReturn(draft.ratingDepositReturn);
+      if (draft.ratingListingAccuracy) setRatingListingAccuracy(draft.ratingListingAccuracy);
+      if (draft.ratingLandlordResponsiveness) setRatingLandlordResponsiveness(draft.ratingLandlordResponsiveness);
+      if (draft.ratingFlatRepairs) setRatingFlatRepairs(draft.ratingFlatRepairs);
+      if (draft.ratingWouldRentAgain) setRatingWouldRentAgain(draft.ratingWouldRentAgain);
       if (draft.reviewBody) setReviewBody(draft.reviewBody);
       if (draft.monthlyRent) setMonthlyRent(draft.monthlyRent);
       if (draft.flatSize) setFlatSize(draft.flatSize);
@@ -635,11 +651,18 @@ export default function ReviewForm() {
           tenancy_to:            toYear === "current" || toYear === "" ? undefined : Number(toYear),
           currently_renting:     toYear === "current" || stillRenting === true,
           rental_method:         rentMethod,
-          rating_overall:        overallRating,
-          rating_deposit:        depositReturn,
-          rating_accuracy:       listingAccuracy,
-          rating_maintenance:    maintenance,
-          rating_responsiveness: responsiveness,
+          rating_overall:                   overallRating,
+          rating_maintenance:               ratingMaintenance,
+          rating_cleanliness:               ratingCleanliness,
+          rating_pest_control:              ratingPestControl,
+          rating_noise:                     ratingNoise,
+          rating_facilities:                ratingFacilities,
+          rating_building_mgmt:             ratingBuildingMgmt,
+          rating_deposit_return:            ratingDepositReturn,
+          rating_listing_accuracy:          ratingListingAccuracy,
+          rating_landlord_responsiveness:   ratingLandlordResponsiveness,
+          rating_flat_repairs:              ratingFlatRepairs,
+          rating_would_rent_again:          ratingWouldRentAgain,
           review_text:           reviewBody,
           monthly_rent:          monthlyRent ? Number(monthlyRent) : undefined,
           flat_size_sqft:        flatSize ? Number(flatSize) : undefined,
@@ -676,10 +699,17 @@ export default function ReviewForm() {
       rentMethod,
       stillRenting,
       overallRating,
-      depositReturn,
-      listingAccuracy,
-      maintenance,
-      responsiveness,
+      ratingMaintenance,
+      ratingCleanliness,
+      ratingPestControl,
+      ratingNoise,
+      ratingFacilities,
+      ratingBuildingMgmt,
+      ratingDepositReturn,
+      ratingListingAccuracy,
+      ratingLandlordResponsiveness,
+      ratingFlatRepairs,
+      ratingWouldRentAgain,
       reviewBody,
       monthlyRent,
       flatSize,
@@ -708,10 +738,17 @@ export default function ReviewForm() {
     setRentMethod(null);
     setStillRenting(null);
     setOverallRating(0);
-    setDepositReturn(0);
-    setListingAccuracy(0);
-    setMaintenance(0);
-    setResponsiveness(0);
+    setRatingMaintenance(0);
+    setRatingCleanliness(0);
+    setRatingPestControl(0);
+    setRatingNoise(0);
+    setRatingFacilities(0);
+    setRatingBuildingMgmt(0);
+    setRatingDepositReturn(0);
+    setRatingListingAccuracy(0);
+    setRatingLandlordResponsiveness(0);
+    setRatingFlatRepairs(0);
+    setRatingWouldRentAgain(0);
     setReviewBody("");
     setMonthlyRent("");
     setFlatSize("");
@@ -732,10 +769,17 @@ export default function ReviewForm() {
     stillRenting !== null;
   const step3Valid =
     overallRating > 0 &&
-    depositReturn > 0 &&
-    listingAccuracy > 0 &&
-    maintenance > 0 &&
-    responsiveness > 0;
+    ratingMaintenance > 0 &&
+    ratingCleanliness > 0 &&
+    ratingPestControl > 0 &&
+    ratingNoise > 0 &&
+    ratingFacilities > 0 &&
+    ratingBuildingMgmt > 0 &&
+    ratingDepositReturn > 0 &&
+    ratingListingAccuracy > 0 &&
+    ratingLandlordResponsiveness > 0 &&
+    ratingFlatRepairs > 0 &&
+    ratingWouldRentAgain > 0;
   const step4Valid =
     wordCount >= 50 &&
     confirmChecked &&
@@ -1173,37 +1217,90 @@ export default function ReviewForm() {
                       </div>
                     </div>
 
-                    {/* Category ratings */}
-                    <div className="flex flex-col gap-4">
-                      {(
-                        [
-                          { label: "Deposit return", value: depositReturn, onChange: setDepositReturn },
-                          { label: "Listing accuracy / property quality", value: listingAccuracy, onChange: setListingAccuracy },
-                          { label: "Maintenance", value: maintenance, onChange: setMaintenance },
-                          { label: "Responsiveness", value: responsiveness, onChange: setResponsiveness },
-                        ]
-                      ).map(({ label, value, onChange }) => (
-                        <div key={label} className="flex items-center gap-3">
-                          <span className="text-sm flex-1 min-w-0" style={{ color: "#6B7280" }}>
-                            {label}
-                          </span>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <StarPicker value={value} onChange={onChange} size={22} />
-                            {value > 0 && (
-                              <motion.span
-                                key={value}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.15 }}
-                                className="text-xs font-bold w-7 text-right"
-                                style={{ color: "#4D8B6F" }}
-                              >
-                                {value}/5
-                              </motion.span>
-                            )}
+                    {/* Section A — Building ratings */}
+                    <div className="mb-6">
+                      <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "#555555" }}>
+                        Rate the building
+                      </p>
+                      <p className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
+                        How was the building itself?
+                      </p>
+                      <div className="flex flex-col gap-4">
+                        {(
+                          [
+                            { label: "Maintenance & repairs",       value: ratingMaintenance,    onChange: setRatingMaintenance },
+                            { label: "Cleanliness of common areas", value: ratingCleanliness,    onChange: setRatingCleanliness },
+                            { label: "Pest control",                value: ratingPestControl,    onChange: setRatingPestControl },
+                            { label: "Noise levels",                value: ratingNoise,          onChange: setRatingNoise },
+                            { label: "Building facilities",         value: ratingFacilities,     onChange: setRatingFacilities },
+                            { label: "Building management",         value: ratingBuildingMgmt,   onChange: setRatingBuildingMgmt },
+                          ] as { label: string; value: number; onChange: (v: number) => void }[]
+                        ).map(({ label, value, onChange }) => (
+                          <div key={label} className="flex items-center gap-3">
+                            <span className="text-sm flex-1 min-w-0" style={{ color: "#6B7280" }}>{label}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <StarPicker value={value} onChange={onChange} size={22} />
+                              {value > 0 && (
+                                <motion.span
+                                  key={value}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="text-xs font-bold w-7 text-right"
+                                  style={{ color: "#4D8B6F" }}
+                                >
+                                  {value}/5
+                                </motion.span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="mb-6" style={{ borderTop: "1px solid #E2D9CE" }} />
+
+                    {/* Section B — Landlord ratings */}
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "#555555" }}>
+                        Rate your landlord
+                      </p>
+                      <p className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
+                        How was the landlord to deal with?
+                      </p>
+                      <div className="flex flex-col gap-4">
+                        {(
+                          [
+                            { label: "Deposit return",         value: ratingDepositReturn,          onChange: setRatingDepositReturn },
+                            { label: "Listing accuracy",       value: ratingListingAccuracy,         onChange: setRatingListingAccuracy },
+                            { label: "Landlord responsiveness",value: ratingLandlordResponsiveness,  onChange: setRatingLandlordResponsiveness },
+                            { label: "Flat repairs & maintenance", value: ratingFlatRepairs,         onChange: setRatingFlatRepairs },
+                            { label: "Would rent again",       value: ratingWouldRentAgain,          onChange: setRatingWouldRentAgain },
+                          ] as { label: string; value: number; onChange: (v: number) => void }[]
+                        ).map(({ label, value, onChange }) => (
+                          <div key={label} className="flex items-center gap-3">
+                            <span className="text-sm flex-1 min-w-0" style={{ color: "#6B7280" }}>{label}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <StarPicker value={value} onChange={onChange} size={22} />
+                              {value > 0 && (
+                                <motion.span
+                                  key={value}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="text-xs font-bold w-7 text-right"
+                                  style={{ color: "#4D8B6F" }}
+                                >
+                                  {label === "Would rent again"
+                                    ? value <= 1 ? "No" : value <= 2 ? "Probably not" : value === 3 ? "Maybe" : value === 4 ? "Probably" : "Yes"
+                                    : `${value}/5`}
+                                </motion.span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="flex gap-3 mt-8">

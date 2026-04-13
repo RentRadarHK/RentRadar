@@ -67,10 +67,19 @@ interface ModerationEmailParams {
   propertyType: "building" | "landlord";
   reviewText: string;
   ratingOverall: number;
-  ratingDeposit: number;
-  ratingMaintenance: number;
-  ratingResponsiveness: number;
-  ratingAccuracy: number;
+  // Building ratings
+  ratingMaintenance?: number;
+  ratingCleanliness?: number;
+  ratingPestControl?: number;
+  ratingNoise?: number;
+  ratingFacilities?: number;
+  ratingBuildingMgmt?: number;
+  // Landlord ratings
+  ratingDepositReturn?: number;
+  ratingListingAccuracy?: number;
+  ratingLandlordResponsiveness?: number;
+  ratingFlatRepairs?: number;
+  ratingWouldRentAgain?: number;
   tenancyFrom?: number;
   tenancyTo?: number;
   currentlyRenting?: boolean;
@@ -124,15 +133,40 @@ export async function sendModerationEmail(params: ModerationEmailParams) {
           <tbody>
             ${row("Property", params.propertyName + (params.propertyType === "building" ? " (Building)" : " (Landlord)"))}
             ${row("Tenancy", tenancyStr)}
-            ${row("Overall", `${params.ratingOverall}/5 &nbsp;${stars(params.ratingOverall)}`)}
-            ${row("Deposit return", `${params.ratingDeposit}/5`)}
-            ${row("Maintenance", `${params.ratingMaintenance}/5`)}
-            ${row("Responsiveness", `${params.ratingResponsiveness}/5`)}
-            ${row("Listing accuracy", `${params.ratingAccuracy}/5`)}
             ${params.monthlyRent ? row("Rent paid", `HKD ${params.monthlyRent.toLocaleString()}/month`) : ""}
             ${row("Verified tenant", params.verifiedTenant ? "Yes" : "No")}
             ${row("Verification", params.verificationMethod)}
             ${params.reviewerEmail ? row("Reviewer email", params.reviewerEmail) : ""}
+          </tbody>
+        </table>
+
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Overall</p>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+          <tbody>
+            ${row("Overall rating", `${params.ratingOverall}/5 &nbsp;${stars(params.ratingOverall)}`)}
+          </tbody>
+        </table>
+
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Building ratings</p>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+          <tbody>
+            ${params.ratingMaintenance ? row("Maintenance & repairs", `${params.ratingMaintenance}/5`) : ""}
+            ${params.ratingCleanliness ? row("Cleanliness", `${params.ratingCleanliness}/5`) : ""}
+            ${params.ratingPestControl ? row("Pest control", `${params.ratingPestControl}/5`) : ""}
+            ${params.ratingNoise ? row("Noise levels", `${params.ratingNoise}/5`) : ""}
+            ${params.ratingFacilities ? row("Facilities", `${params.ratingFacilities}/5`) : ""}
+            ${params.ratingBuildingMgmt ? row("Building management", `${params.ratingBuildingMgmt}/5`) : ""}
+          </tbody>
+        </table>
+
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Landlord ratings</p>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:24px;">
+          <tbody>
+            ${params.ratingDepositReturn ? row("Deposit return", `${params.ratingDepositReturn}/5`) : ""}
+            ${params.ratingListingAccuracy ? row("Listing accuracy", `${params.ratingListingAccuracy}/5`) : ""}
+            ${params.ratingLandlordResponsiveness ? row("Responsiveness", `${params.ratingLandlordResponsiveness}/5`) : ""}
+            ${params.ratingFlatRepairs ? row("Flat repairs", `${params.ratingFlatRepairs}/5`) : ""}
+            ${params.ratingWouldRentAgain ? row("Would rent again", `${params.ratingWouldRentAgain}/5`) : ""}
           </tbody>
         </table>
 

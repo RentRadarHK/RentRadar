@@ -116,6 +116,9 @@ interface LocalReview {
   location: string;
   timeAgo: string;
   category: string;
+  depositReturn?: number;
+  landlordResponsiveness?: number;
+  wouldRentAgain?: number;
 }
 
 function relativeTime(dateStr: string): string {
@@ -134,6 +137,8 @@ function relativeTime(dateStr: string): string {
 function deriveCategory(r: Review): string {
   if (r.rating >= 4) return "positive";
   if (r.rating <= 2) return "critical";
+  if (r.dimensions.depositReturn > 0 && r.dimensions.depositReturn <= 2) return "deposit";
+  if (r.dimensions.flatRepairs > 0 && r.dimensions.flatRepairs <= 2) return "maintenance";
   const body = r.body.toLowerCase();
   if (body.includes("deposit")) return "deposit";
   if (body.includes("mainten") || body.includes("repair")) return "maintenance";
@@ -149,6 +154,9 @@ function toLocalReview(r: Review, index: number): LocalReview {
     location: r.district,
     timeAgo: relativeTime(r.datePosted),
     category: deriveCategory(r),
+    depositReturn:          r.dimensions.depositReturn || undefined,
+    landlordResponsiveness: r.dimensions.landlordResponsiveness || undefined,
+    wouldRentAgain:         r.dimensions.wouldRentAgain || undefined,
   };
 }
 
@@ -156,7 +164,7 @@ function computeRedFlags(rs: Review[]): { text: string; count: number }[] {
   const flags: { text: string; count: number }[] = [];
   const deposit = rs.filter((r) => r.dimensions.depositReturn <= 2).length;
   if (deposit > 0) flags.push({ text: "Deposit disputes reported", count: deposit });
-  const maint = rs.filter((r) => r.dimensions.maintenance <= 2).length;
+  const maint = rs.filter((r) => r.dimensions.flatRepairs <= 2).length;
   if (maint > 0) flags.push({ text: "Delayed maintenance response", count: maint });
   const listing = rs.filter((r) => r.dimensions.listingAccuracy <= 2).length;
   if (listing > 0) flags.push({ text: "Property condition below listing standard", count: listing });
@@ -269,13 +277,28 @@ export default function LandlordProfile({
       }
     : landlord;
 
-  const ratingDimensionsDisplay = landlordData
+  function avgDimension(fn: (r: Review) => number): number {
+    if (!landlordReviews || landlordReviews.length === 0) return 0;
+    const vals = landlordReviews.map(fn).filter((v) => v > 0);
+    if (!vals.length) return 0;
+    return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+  }
+
+  const ratingDimensionsDisplay = landlordReviews && landlordReviews.length > 0
+    ? [
+        { label: "Deposit return",      score: avgDimension((r) => r.dimensions.depositReturn) },
+        { label: "Listing accuracy",    score: avgDimension((r) => r.dimensions.listingAccuracy) },
+        { label: "Responsiveness",      score: avgDimension((r) => r.dimensions.landlordResponsiveness) },
+        { label: "Flat repairs",        score: avgDimension((r) => r.dimensions.flatRepairs) },
+        { label: "Would rent again",    score: avgDimension((r) => r.dimensions.wouldRentAgain) },
+      ].filter((s) => s.score > 0)
+    : landlordData
     ? [
         { label: "Deposit return",       score: landlordData.ratings.depositReturn },
-        { label: "Responsiveness",        score: landlordData.ratings.responsiveness },
-        { label: "Listing accuracy",      score: landlordData.ratings.listingAccuracy },
-        { label: "Maintenance & repairs", score: landlordData.ratings.maintenance },
-        { label: "Renewal fairness",      score: landlordData.ratings.renewalFairness },
+        { label: "Responsiveness",       score: landlordData.ratings.responsiveness },
+        { label: "Listing accuracy",     score: landlordData.ratings.listingAccuracy },
+        { label: "Maintenance & repairs",score: landlordData.ratings.maintenance },
+        { label: "Renewal fairness",     score: landlordData.ratings.renewalFairness },
       ]
     : ratingDimensions;
 
@@ -650,6 +673,28 @@ export default function LandlordProfile({
                     >
                       {expanded.has(review.id) ? "Show less" : "Read more"}
                     </button>
+
+                    {/* Compact landlord score breakdown */}
+                    {(review.depositReturn || review.landlordResponsiveness || review.wouldRentAgain) && (
+                      <div
+                        className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4 pt-3"
+                        style={{ borderTop: "1px solid #F5F0E8" }}
+                      >
+                        {[
+                          { label: "Deposit",     score: review.depositReturn },
+                          { label: "Responsive",  score: review.landlordResponsiveness },
+                          { label: "Rent again",  score: review.wouldRentAgain },
+                        ].filter((s) => s.score).map(({ label, score }) => (
+                          <div key={label} className="flex items-center justify-between gap-2">
+                            <span className="text-[11px]" style={{ color: "#9CA3AF" }}>{label}</span>
+                            <div className="flex items-center gap-1">
+                              <StarRating stars={Math.round(score!)} size={10} />
+                              <span className="text-[11px] font-semibold" style={{ color: "#555555" }}>{score}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between flex-wrap gap-3 pt-3"
                       style={{ borderTop: "1px solid #F5F0E8" }}

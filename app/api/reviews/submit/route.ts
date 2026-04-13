@@ -13,10 +13,17 @@ interface SubmitBody {
   currently_renting?: boolean;
   rental_method?: "direct" | "agent" | "corporate";
   rating_overall: number;
-  rating_deposit: number;
-  rating_accuracy: number;
-  rating_maintenance: number;
-  rating_responsiveness: number;
+  rating_maintenance?: number;
+  rating_cleanliness?: number;
+  rating_pest_control?: number;
+  rating_noise?: number;
+  rating_facilities?: number;
+  rating_building_mgmt?: number;
+  rating_deposit_return?: number;
+  rating_listing_accuracy?: number;
+  rating_landlord_responsiveness?: number;
+  rating_flat_repairs?: number;
+  rating_would_rent_again?: number;
   review_text: string;
   monthly_rent?: number;
   flat_size_sqft?: number;
@@ -117,11 +124,18 @@ export async function POST(req: NextRequest) {
     tenancy_to:            body.tenancy_to ?? null,
     currently_renting:     body.currently_renting ?? false,
     rental_method:         body.rental_method ?? null,
-    rating_overall:        body.rating_overall,
-    rating_deposit:        body.rating_deposit,
-    rating_accuracy:       body.rating_accuracy,
-    rating_maintenance:    body.rating_maintenance,
-    rating_responsiveness: body.rating_responsiveness,
+    rating_overall:                 body.rating_overall,
+    rating_maintenance:             body.rating_maintenance ?? null,
+    rating_cleanliness:             body.rating_cleanliness ?? null,
+    rating_pest_control:            body.rating_pest_control ?? null,
+    rating_noise:                   body.rating_noise ?? null,
+    rating_facilities:              body.rating_facilities ?? null,
+    rating_building_mgmt:           body.rating_building_mgmt ?? null,
+    rating_deposit_return:          body.rating_deposit_return ?? null,
+    rating_listing_accuracy:        body.rating_listing_accuracy ?? null,
+    rating_landlord_responsiveness: body.rating_landlord_responsiveness ?? null,
+    rating_flat_repairs:            body.rating_flat_repairs ?? null,
+    rating_would_rent_again:        body.rating_would_rent_again ?? null,
     review_text:           body.review_text,
     monthly_rent:          body.monthly_rent ?? null,
     flat_size_sqft:        body.flat_size_sqft ?? null,
@@ -199,23 +213,30 @@ export async function POST(req: NextRequest) {
     }
 
     await sendModerationEmail({
-      reviewId:             reviewId,
-      moderationToken:      moderationToken,
+      reviewId,
+      moderationToken,
       propertyName,
       propertyType,
-      reviewText:           body.review_text,
-      ratingOverall:        body.rating_overall,
-      ratingDeposit:        body.rating_deposit,
-      ratingMaintenance:    body.rating_maintenance,
-      ratingResponsiveness: body.rating_responsiveness,
-      ratingAccuracy:       body.rating_accuracy,
-      tenancyFrom:          body.tenancy_from,
-      tenancyTo:            body.tenancy_to,
-      currentlyRenting:     body.currently_renting,
-      monthlyRent:          body.monthly_rent,
-      verifiedTenant:       body.verification_method === "google",
-      verificationMethod:   body.verification_method,
-      reviewerEmail:        user?.email ?? body.verification_email,
+      reviewText:                     body.review_text,
+      ratingOverall:                  body.rating_overall,
+      ratingMaintenance:              body.rating_maintenance,
+      ratingCleanliness:              body.rating_cleanliness,
+      ratingPestControl:              body.rating_pest_control,
+      ratingNoise:                    body.rating_noise,
+      ratingFacilities:               body.rating_facilities,
+      ratingBuildingMgmt:             body.rating_building_mgmt,
+      ratingDepositReturn:            body.rating_deposit_return,
+      ratingListingAccuracy:          body.rating_listing_accuracy,
+      ratingLandlordResponsiveness:   body.rating_landlord_responsiveness,
+      ratingFlatRepairs:              body.rating_flat_repairs,
+      ratingWouldRentAgain:           body.rating_would_rent_again,
+      tenancyFrom:                    body.tenancy_from,
+      tenancyTo:                      body.tenancy_to,
+      currentlyRenting:               body.currently_renting,
+      monthlyRent:                    body.monthly_rent,
+      verifiedTenant:                 body.verification_method === "google",
+      verificationMethod:             body.verification_method,
+      reviewerEmail:                  user?.email ?? body.verification_email,
     });
   } catch (modErr) {
     // Non-fatal — review is saved regardless

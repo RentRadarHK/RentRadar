@@ -1,5 +1,28 @@
 import { Review } from "./types";
 
+// Helper for mock dimensions — building scores default to 3, landlord scores specified
+function dims(
+  depositReturn: number,
+  landlordResponsiveness: number,
+  listingAccuracy: number,
+  flatRepairs: number,
+  wouldRentAgain: number
+): Review["dimensions"] {
+  return {
+    maintenance: 3,
+    cleanliness: 3,
+    pestControl: 3,
+    noise: 3,
+    facilities: 3,
+    buildingMgmt: 3,
+    depositReturn,
+    listingAccuracy,
+    landlordResponsiveness,
+    flatRepairs,
+    wouldRentAgain,
+  };
+}
+
 export const reviews: Review[] = [
   // ── Harbour View Tower ──────────────────────────────────────────────────────
   {
@@ -15,13 +38,7 @@ export const reviews: Review[] = [
     market: "Hong Kong",
     datePosted: "2024-10-12",
     helpfulCount: 18,
-    dimensions: {
-      depositReturn: 1,
-      responsiveness: 2,
-      listingAccuracy: 3,
-      maintenance: 2,
-      renewalFairness: 3,
-    },
+    dimensions: dims(1, 2, 3, 2, 1),
   },
   {
     id: "r-002",
@@ -36,13 +53,7 @@ export const reviews: Review[] = [
     market: "Hong Kong",
     datePosted: "2024-07-22",
     helpfulCount: 9,
-    dimensions: {
-      depositReturn: 3,
-      responsiveness: 4,
-      listingAccuracy: 3,
-      maintenance: 2,
-      renewalFairness: 3,
-    },
+    dimensions: dims(3, 4, 3, 2, 3),
   },
   // ── Metro Residences ────────────────────────────────────────────────────────
   {
@@ -58,13 +69,7 @@ export const reviews: Review[] = [
     market: "Hong Kong",
     datePosted: "2024-09-01",
     helpfulCount: 24,
-    dimensions: {
-      depositReturn: 5,
-      responsiveness: 5,
-      listingAccuracy: 4,
-      maintenance: 5,
-      renewalFairness: 5,
-    },
+    dimensions: dims(5, 5, 4, 5, 5),
   },
   {
     id: "r-004",
@@ -79,13 +84,7 @@ export const reviews: Review[] = [
     market: "Hong Kong",
     datePosted: "2024-06-14",
     helpfulCount: 11,
-    dimensions: {
-      depositReturn: 4,
-      responsiveness: 4,
-      listingAccuracy: 4,
-      maintenance: 3,
-      renewalFairness: 5,
-    },
+    dimensions: dims(4, 4, 4, 3, 4),
   },
   // ── Sheung Wan Plaza ────────────────────────────────────────────────────────
   {
@@ -101,13 +100,7 @@ export const reviews: Review[] = [
     market: "Hong Kong",
     datePosted: "2024-08-03",
     helpfulCount: 31,
-    dimensions: {
-      depositReturn: 2,
-      responsiveness: 1,
-      listingAccuracy: 2,
-      maintenance: 2,
-      renewalFairness: 1,
-    },
+    dimensions: dims(2, 1, 2, 2, 1),
   },
   {
     id: "r-006",
@@ -122,13 +115,7 @@ export const reviews: Review[] = [
     market: "Hong Kong",
     datePosted: "2024-05-19",
     helpfulCount: 14,
-    dimensions: {
-      depositReturn: 2,
-      responsiveness: 2,
-      listingAccuracy: 3,
-      maintenance: 1,
-      renewalFairness: 3,
-    },
+    dimensions: dims(2, 2, 3, 1, 2),
   },
   // ── TST Court ───────────────────────────────────────────────────────────────
   {
@@ -144,13 +131,7 @@ export const reviews: Review[] = [
     market: "Hong Kong",
     datePosted: "2024-10-28",
     helpfulCount: 45,
-    dimensions: {
-      depositReturn: 5,
-      responsiveness: 5,
-      listingAccuracy: 5,
-      maintenance: 5,
-      renewalFairness: 5,
-    },
+    dimensions: dims(5, 5, 5, 5, 5),
   },
   {
     id: "r-008",
@@ -165,13 +146,7 @@ export const reviews: Review[] = [
     market: "Hong Kong",
     datePosted: "2024-09-15",
     helpfulCount: 17,
-    dimensions: {
-      depositReturn: 4,
-      responsiveness: 5,
-      listingAccuracy: 4,
-      maintenance: 4,
-      renewalFairness: 4,
-    },
+    dimensions: dims(4, 5, 4, 4, 4),
   },
 ];
 

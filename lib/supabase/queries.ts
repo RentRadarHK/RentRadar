@@ -59,10 +59,19 @@ interface ReviewRow {
   rating_overall: number;
   review_text: string;
   verified_tenant: boolean;
-  rating_deposit: number;
-  rating_responsiveness: number;
-  rating_accuracy: number;
-  rating_maintenance: number;
+  // Building ratings
+  rating_maintenance: number | null;
+  rating_cleanliness: number | null;
+  rating_pest_control: number | null;
+  rating_noise: number | null;
+  rating_facilities: number | null;
+  rating_building_mgmt: number | null;
+  // Landlord ratings
+  rating_deposit_return: number | null;
+  rating_listing_accuracy: number | null;
+  rating_landlord_responsiveness: number | null;
+  rating_flat_repairs: number | null;
+  rating_would_rent_again: number | null;
 }
 
 // ── Row mappers ───────────────────────────────────────────────────────────────
@@ -147,11 +156,17 @@ function mapReview(row: ReviewRow): Review {
     datePosted: row.created_at,
     helpfulCount: 0,
     dimensions: {
-      depositReturn: row.rating_deposit,
-      responsiveness: row.rating_responsiveness,
-      listingAccuracy: row.rating_accuracy,
-      maintenance: row.rating_maintenance,
-      renewalFairness: 0,
+      maintenance:              row.rating_maintenance ?? 0,
+      cleanliness:              row.rating_cleanliness ?? 0,
+      pestControl:              row.rating_pest_control ?? 0,
+      noise:                    row.rating_noise ?? 0,
+      facilities:               row.rating_facilities ?? 0,
+      buildingMgmt:             row.rating_building_mgmt ?? 0,
+      depositReturn:            row.rating_deposit_return ?? 0,
+      listingAccuracy:          row.rating_listing_accuracy ?? 0,
+      landlordResponsiveness:   row.rating_landlord_responsiveness ?? 0,
+      flatRepairs:              row.rating_flat_repairs ?? 0,
+      wouldRentAgain:           row.rating_would_rent_again ?? 0,
     },
   };
 }

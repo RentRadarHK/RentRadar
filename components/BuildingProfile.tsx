@@ -491,6 +491,44 @@ export default function BuildingProfile({
               </motion.div>
             )}
 
+            {/* ── Building Scores ── */}
+            {buildingReviews.length > 0 && (() => {
+              function avg(fn: (r: Review) => number): number {
+                const vals = buildingReviews.map(fn).filter((v) => v > 0);
+                if (!vals.length) return 0;
+                return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+              }
+              const bScores = [
+                { label: "Maintenance & repairs",  score: avg((r) => r.dimensions.maintenance) },
+                { label: "Cleanliness",            score: avg((r) => r.dimensions.cleanliness) },
+                { label: "Pest control",           score: avg((r) => r.dimensions.pestControl) },
+                { label: "Noise levels",           score: avg((r) => r.dimensions.noise) },
+                { label: "Facilities",             score: avg((r) => r.dimensions.facilities) },
+                { label: "Building management",    score: avg((r) => r.dimensions.buildingMgmt) },
+              ].filter((s) => s.score > 0);
+              if (!bScores.length) return null;
+              return (
+                <motion.div
+                  {...cardFade(0.05)}
+                  className="bg-white rounded-[16px] p-8"
+                  style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
+                >
+                  <h2 className="text-lg font-bold text-[#555555] mb-6">Building scores</h2>
+                  <div className="flex flex-col gap-4">
+                    {bScores.map(({ label, score }) => (
+                      <div key={label} className="flex items-center gap-4">
+                        <span className="text-sm text-[#6B7280] flex-1 min-w-0">{label}</span>
+                        <StarRating stars={Math.round(score)} size={14} />
+                        <span className="text-sm font-bold w-8 text-right shrink-0" style={{ color: "#555555" }}>
+                          {score}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })()}
+
             {/* ── Write a Review Banner ── */}
             <div
               className="rounded-[16px] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
@@ -588,6 +626,31 @@ export default function BuildingProfile({
                       {expanded.has(review.id) ? "Show less" : "Read more"}
                     </button>
 
+                    {/* Compact score breakdown */}
+                    {(review.dimensions.maintenance > 0 || review.dimensions.depositReturn > 0) && (
+                      <div
+                        className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4 pt-3"
+                        style={{ borderTop: "1px solid #F5F0E8" }}
+                      >
+                        {[
+                          { label: "Maintenance",  score: review.dimensions.maintenance },
+                          { label: "Deposit",      score: review.dimensions.depositReturn },
+                          { label: "Cleanliness",  score: review.dimensions.cleanliness },
+                          { label: "Responsive",   score: review.dimensions.landlordResponsiveness },
+                          { label: "Pest control", score: review.dimensions.pestControl },
+                          { label: "Rent again",   score: review.dimensions.wouldRentAgain },
+                        ].filter((s) => s.score > 0).map(({ label, score }) => (
+                          <div key={label} className="flex items-center justify-between gap-2">
+                            <span className="text-[11px]" style={{ color: "#9CA3AF" }}>{label}</span>
+                            <div className="flex items-center gap-1">
+                              <StarRating stars={Math.round(score)} size={10} />
+                              <span className="text-[11px] font-semibold" style={{ color: "#555555" }}>{score}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div
                       className="flex items-center justify-between flex-wrap gap-3 pt-3"
                       style={{ borderTop: "1px solid #F5F0E8" }}
@@ -600,7 +663,7 @@ export default function BuildingProfile({
                           ✓ Verified Tenant
                         </span>
                         <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                          {review.flatRef} · {review.district} · {formatDate(review.datePosted)}
+                          {formatDate(review.datePosted)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2" style={{ color: "#9CA3AF" }}>

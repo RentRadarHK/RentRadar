@@ -71,11 +71,19 @@ export interface Review {
   datePosted: string;
   helpfulCount: number;
   dimensions: {
-    depositReturn: number;
-    responsiveness: number;
-    listingAccuracy: number;
+    // Building ratings
     maintenance: number;
-    renewalFairness: number;
+    cleanliness: number;
+    pestControl: number;
+    noise: number;
+    facilities: number;
+    buildingMgmt: number;
+    // Landlord ratings
+    depositReturn: number;
+    listingAccuracy: number;
+    landlordResponsiveness: number;
+    flatRepairs: number;
+    wouldRentAgain: number;
   };
 }
 
