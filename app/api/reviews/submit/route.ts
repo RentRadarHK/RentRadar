@@ -150,7 +150,10 @@ export async function POST(req: NextRequest) {
   const reviewId: string = review.id;
 
   // ── Email verification token ──────────────────────────────────────────────
+  console.log("verification_method:", body.verification_method);
   if (body.verification_method === "email" && body.verification_email) {
+    console.log("attempting to send verification email to:", body.verification_email);
+
     const { data: tokenRow, error: tokenError } = await supabase
       .from("review_verification_tokens")
       .insert({ review_id: reviewId })
@@ -158,14 +161,14 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (tokenError || !tokenRow) {
-      // Non-fatal — review saved but email won't send
-      console.error("Token insert failed:", tokenError?.message);
+      console.error("Token insert failed:", tokenError?.message, tokenError?.code, tokenError?.details);
     } else {
+      console.log("token inserted:", tokenRow.token);
       try {
         await sendVerificationEmail(body.verification_email, reviewId, tokenRow.token);
+        console.log("email sent successfully");
       } catch (emailErr) {
-        console.error("Email send failed:", emailErr);
-        // Non-fatal — review saved; user can re-request later
+        console.error("email send failed:", emailErr);
       }
     }
   }
