@@ -30,27 +30,14 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes — redirect unauthenticated users to /signup.
-  // /review is intentionally PUBLIC — never redirect it.
+  // Only /account is protected — redirect unauthenticated users to homepage.
+  // All other routes including /review are fully public.
   const { pathname } = request.nextUrl;
+  const isAccount = pathname === "/account" || pathname.startsWith("/account/");
 
-  // Explicit public-route allowlist — these are NEVER redirected.
-  const publicPaths = ["/review", "/search", "/building", "/landlord", "/about", "/how-it-works", "/pricing", "/"];
-  const isExplicitlyPublic = publicPaths.some(
-    (p) => pathname === p || pathname.startsWith(p + "/") || pathname.startsWith(p + "?")
-  );
-
-  const protectedPaths = ["/account"];
-  const isProtected = !isExplicitlyPublic && protectedPaths.some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
-
-  console.log(`[middleware] pathname=${pathname} user=${user?.id ?? "none"} isExplicitlyPublic=${isExplicitlyPublic} isProtected=${isProtected}`);
-
-  if (isProtected && !user) {
-    console.log(`[middleware] REDIRECTING ${pathname} → /signup`);
+  if (isAccount && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/signup";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 

@@ -12,7 +12,7 @@ export default async function AccountPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/signup");
+  if (!user) redirect("/");
 
   return (
     <main>
