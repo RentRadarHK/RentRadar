@@ -1,5 +1,6 @@
 ﻿"use client";
 
+// Write a Review links to /review?landlord=[id] — verified April 2026
 import { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import {
