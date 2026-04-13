@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
-import { sendVerificationEmail } from "@/lib/email/resend";
+import { sendVerificationEmail, sendModerationEmail } from "@/lib/email/resend";
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
@@ -108,6 +108,8 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Insert review ─────────────────────────────────────────────────────────
+  const moderationToken = crypto.randomUUID();
+
   const reviewRecord = {
     building_id:           body.building_id ?? null,
     landlord_id:           body.landlord_id ?? null,
@@ -132,6 +134,7 @@ export async function POST(req: NextRequest) {
     // Google auth = immediately verified; others start pending
     verified_tenant:       body.verification_method === "google",
     status:                "pending" as const,
+    moderation_token:      moderationToken,
   };
 
   const { data: review, error: insertError } = await supabase
@@ -171,6 +174,52 @@ export async function POST(req: NextRequest) {
         console.error("email send failed:", emailErr);
       }
     }
+  }
+
+  // ── Admin moderation email ────────────────────────────────────────────────
+  try {
+    // Fetch the property name for the email subject/heading
+    let propertyName = "Unknown property";
+    let propertyType: "building" | "landlord" = "building";
+
+    if (body.building_id) {
+      const { data: bldg } = await supabase
+        .from("buildings")
+        .select("name")
+        .eq("id", body.building_id)
+        .single();
+      if (bldg) { propertyName = bldg.name; propertyType = "building"; }
+    } else if (body.landlord_id) {
+      const { data: ll } = await supabase
+        .from("landlords")
+        .select("name")
+        .eq("id", body.landlord_id)
+        .single();
+      if (ll) { propertyName = ll.name; propertyType = "landlord"; }
+    }
+
+    await sendModerationEmail({
+      reviewId:             reviewId,
+      moderationToken:      moderationToken,
+      propertyName,
+      propertyType,
+      reviewText:           body.review_text,
+      ratingOverall:        body.rating_overall,
+      ratingDeposit:        body.rating_deposit,
+      ratingMaintenance:    body.rating_maintenance,
+      ratingResponsiveness: body.rating_responsiveness,
+      ratingAccuracy:       body.rating_accuracy,
+      tenancyFrom:          body.tenancy_from,
+      tenancyTo:            body.tenancy_to,
+      currentlyRenting:     body.currently_renting,
+      monthlyRent:          body.monthly_rent,
+      verifiedTenant:       body.verification_method === "google",
+      verificationMethod:   body.verification_method,
+      reviewerEmail:        user?.email ?? body.verification_email,
+    });
+  } catch (modErr) {
+    // Non-fatal — review is saved regardless
+    console.error("Moderation email failed:", modErr);
   }
 
   // ── Rating aggregation ────────────────────────────────────────────────────

@@ -232,6 +232,7 @@ export async function getReviewsForBuilding(buildingId: string): Promise<Review[
     .from("reviews")
     .select("*")
     .eq("building_id", buildingId)
+    .eq("status", "approved")
     .order("date_posted", { ascending: false });
 
   if (error || !data) return [];
@@ -243,6 +244,7 @@ export async function getReviewsForLandlord(landlordId: string): Promise<Review[
     .from("reviews")
     .select("*")
     .eq("landlord_id", landlordId)
+    .eq("status", "approved")
     .order("date_posted", { ascending: false });
 
   if (error || !data) return [];
