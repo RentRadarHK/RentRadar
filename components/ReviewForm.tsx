@@ -586,10 +586,11 @@ export default function ReviewForm() {
       // ── Google verification: trigger OAuth if not signed in ────────────────
       if (verifyMethod === "google" && !user) {
         saveDraftState();
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
         const supabase = createClient();
         await supabase.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: window.location.href },
+          options: { redirectTo: `${window.location.origin}/auth/callback?next=${next}` },
         });
         // Page will reload after OAuth — stop here
         return;
@@ -678,10 +679,11 @@ export default function ReviewForm() {
 
   async function handleGoogleSignIn() {
     saveDraftState();
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.href },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${next}` },
     });
   }
 
