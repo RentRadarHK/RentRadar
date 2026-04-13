@@ -53,22 +53,16 @@ interface LandlordRow {
 
 interface ReviewRow {
   id: string;
-  landlord_id: string;
-  building_id: string;
-  flat_ref: string;
-  rating: number;
-  headline: string;
-  body: string;
+  landlord_id: string | null;
+  building_id: string | null;
+  created_at: string;
+  rating_overall: number;
+  review_text: string;
   verified_tenant: boolean;
-  district: string;
-  market: string;
-  date_posted: string;
-  helpful_count: number;
-  rating_deposit_return: number;
+  rating_deposit: number;
   rating_responsiveness: number;
-  rating_listing_accuracy: number;
+  rating_accuracy: number;
   rating_maintenance: number;
-  rating_renewal_fairness: number;
 }
 
 // ── Row mappers ───────────────────────────────────────────────────────────────
@@ -130,26 +124,34 @@ function mapLandlord(row: LandlordRow, propertyIds: string[] = []): Landlord {
   };
 }
 
+function headlineFromText(text: string): string {
+  // Use first sentence, capped at 80 chars
+  const firstSentence = text.split(/[.!?]/)[0]?.trim() ?? text;
+  return firstSentence.length <= 80
+    ? firstSentence
+    : firstSentence.slice(0, 77).replace(/\s+\S*$/, "") + "...";
+}
+
 function mapReview(row: ReviewRow): Review {
   return {
     id: row.id,
-    landlordId: row.landlord_id,
-    buildingId: row.building_id,
-    flatRef: row.flat_ref,
-    rating: row.rating,
-    headline: row.headline,
-    body: row.body,
+    landlordId: row.landlord_id ?? "",
+    buildingId: row.building_id ?? "",
+    flatRef: "",
+    rating: row.rating_overall,
+    headline: headlineFromText(row.review_text),
+    body: row.review_text,
     verifiedTenant: row.verified_tenant,
-    district: row.district,
-    market: row.market,
-    datePosted: row.date_posted,
-    helpfulCount: row.helpful_count,
+    district: "",
+    market: "",
+    datePosted: row.created_at,
+    helpfulCount: 0,
     dimensions: {
-      depositReturn: row.rating_deposit_return,
+      depositReturn: row.rating_deposit,
       responsiveness: row.rating_responsiveness,
-      listingAccuracy: row.rating_listing_accuracy,
+      listingAccuracy: row.rating_accuracy,
       maintenance: row.rating_maintenance,
-      renewalFairness: row.rating_renewal_fairness,
+      renewalFairness: 0,
     },
   };
 }
@@ -233,7 +235,7 @@ export async function getReviewsForBuilding(buildingId: string): Promise<Review[
     .select("*")
     .eq("building_id", buildingId)
     .eq("status", "approved")
-    .order("date_posted", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error || !data) return [];
   return (data as ReviewRow[]).map(mapReview);
@@ -245,7 +247,7 @@ export async function getReviewsForLandlord(landlordId: string): Promise<Review[
     .select("*")
     .eq("landlord_id", landlordId)
     .eq("status", "approved")
-    .order("date_posted", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error || !data) return [];
   return (data as ReviewRow[]).map(mapReview);
@@ -403,47 +405,3 @@ export async function searchAll(
   return { buildings, landlords };
 }
 
-// ── Review submission ─────────────────────────────────────────────────────────
-
-export interface ReviewInsert {
-  landlordId: string;
-  buildingId: string;
-  flatRef: string;
-  rating: number;
-  headline: string;
-  body: string;
-  verifiedTenant?: boolean;
-  district: string;
-  market: string;
-  dimensions: {
-    depositReturn: number;
-    responsiveness: number;
-    listingAccuracy: number;
-    maintenance: number;
-    renewalFairness: number;
-  };
-}
-
-export async function submitReview(
-  review: ReviewInsert
-): Promise<{ success: boolean; error?: string }> {
-  const { error } = await supabase.from("reviews").insert({
-    landlord_id: review.landlordId,
-    building_id: review.buildingId,
-    flat_ref: review.flatRef,
-    rating: review.rating,
-    headline: review.headline,
-    body: review.body,
-    verified_tenant: review.verifiedTenant ?? false,
-    district: review.district,
-    market: review.market,
-    rating_deposit_return: review.dimensions.depositReturn,
-    rating_responsiveness: review.dimensions.responsiveness,
-    rating_listing_accuracy: review.dimensions.listingAccuracy,
-    rating_maintenance: review.dimensions.maintenance,
-    rating_renewal_fairness: review.dimensions.renewalFairness,
-  });
-
-  if (error) return { success: false, error: error.message };
-  return { success: true };
-}
