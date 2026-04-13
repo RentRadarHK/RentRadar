@@ -531,6 +531,15 @@ export default function ReviewForm() {
     if (!raw) return;
     try {
       const draft = JSON.parse(raw);
+      const currentBuildingId = searchParams?.get("building");
+      const currentLandlordId = searchParams?.get("landlord");
+      if (
+        (currentBuildingId && draft.buildingId !== currentBuildingId) ||
+        (currentLandlordId && draft.landlordId !== currentLandlordId)
+      ) {
+        sessionStorage.removeItem(REVIEW_DRAFT_KEY);
+        return;
+      }
       if (draft.selectedProperty) setSelectedProperty(draft.selectedProperty);
       if (draft.fromYear !== undefined) setFromYear(draft.fromYear);
       if (draft.toYear !== undefined) setToYear(draft.toYear);
@@ -647,6 +656,7 @@ export default function ReviewForm() {
       if (!res.ok) {
         setSubmitError(data.error ?? "Something went wrong. Please try again.");
       } else {
+        sessionStorage.removeItem(REVIEW_DRAFT_KEY);
         setSubmitted(true);
       }
     } catch {
@@ -658,6 +668,8 @@ export default function ReviewForm() {
 
   function saveDraftState() {
     sessionStorage.setItem(REVIEW_DRAFT_KEY, JSON.stringify({
+      buildingId: searchParams?.get("building"),
+      landlordId: searchParams?.get("landlord"),
       selectedProperty,
       fromYear,
       toYear,
