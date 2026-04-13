@@ -31,15 +31,21 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protected routes — redirect unauthenticated users to /signup.
-  // NOTE: /review is intentionally PUBLIC. Auth only happens client-side
-  // at submission time when the user selects Google sign-in.
+  // /review is intentionally PUBLIC — never redirect it.
   const { pathname } = request.nextUrl;
+
+  // Explicit public-route allowlist — these are NEVER redirected.
+  const publicPaths = ["/review", "/search", "/building", "/landlord", "/about", "/how-it-works", "/pricing", "/"];
+  const isExplicitlyPublic = publicPaths.some(
+    (p) => pathname === p || pathname.startsWith(p + "/") || pathname.startsWith(p + "?")
+  );
+
   const protectedPaths = ["/account"];
-  const isProtected = protectedPaths.some(
+  const isProtected = !isExplicitlyPublic && protectedPaths.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
 
-  console.log(`[middleware] pathname=${pathname} user=${user?.id ?? "none"} isProtected=${isProtected}`);
+  console.log(`[middleware] pathname=${pathname} user=${user?.id ?? "none"} isExplicitlyPublic=${isExplicitlyPublic} isProtected=${isProtected}`);
 
   if (isProtected && !user) {
     console.log(`[middleware] REDIRECTING ${pathname} → /signup`);

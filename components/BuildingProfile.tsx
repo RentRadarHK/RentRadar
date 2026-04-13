@@ -1,5 +1,6 @@
 ﻿"use client";
 
+// Write a Review links to /review — updated April 2026
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
