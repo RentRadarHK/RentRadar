@@ -39,7 +39,10 @@ export async function updateSession(request: NextRequest) {
     (p) => pathname === p || pathname.startsWith(p + "/")
   );
 
+  console.log(`[middleware] pathname=${pathname} user=${user?.id ?? "none"} isProtected=${isProtected}`);
+
   if (isProtected && !user) {
+    console.log(`[middleware] REDIRECTING ${pathname} → /signup`);
     const url = request.nextUrl.clone();
     url.pathname = "/signup";
     return NextResponse.redirect(url);
