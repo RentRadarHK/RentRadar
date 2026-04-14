@@ -28,6 +28,7 @@ export const DISTRICT_RENT_PSF: Record<string, number> = {
   "Yuen Long": 21,
   "Sha Tin": 24,
   "Tseung Kwan O": 25,
+  "Sheung Wan": 41,
 };
 
 // RVD Kowloon Class B rental index, base 1999=100

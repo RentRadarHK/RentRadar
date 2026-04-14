@@ -27,7 +27,7 @@ export interface PriceGuideProps {
 // ── Comparison districts by region ───────────────────────────────────────────
 
 const COMPARISON_DISTRICTS: Record<PriceGuideRegion, string[]> = {
-  kowloon: ["Mong Kok", "Tsim Sha Tsui", "Sham Shui Po", "Kennedy Town"],
+  kowloon: ["Mong Kok", "Tsim Sha Tsui", "Sham Shui Po", "Kowloon City"],
   hk_island: ["Wan Chai", "Central & Western", "Eastern", "Causeway Bay"],
   new_territories: ["Sha Tin", "Tseung Kwan O", "Tuen Mun", "Yuen Long"],
 };
@@ -133,7 +133,7 @@ export default function PriceGuide({
   const barsInView = useInView(barRef as React.RefObject<Element>, { once: true, margin: "-40px" });
 
   const psf = DISTRICT_RENT_PSF[district] ?? 32;
-  const compDistricts = COMPARISON_DISTRICTS[region];
+  const compDistricts = COMPARISON_DISTRICTS[region].filter((d) => d !== district);
   const allDistricts = [district, ...compDistricts];
   const maxPsf = Math.max(...allDistricts.map((d) => DISTRICT_RENT_PSF[d] ?? 0));
   const sizeData = SIZE_RANGES[activeSize];
