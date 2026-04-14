@@ -32,6 +32,12 @@ const COMPARISON_DISTRICTS: Record<PriceGuideRegion, string[]> = {
   new_territories: ["Sha Tin", "Tseung Kwan O", "Tuen Mun", "Yuen Long"],
 };
 
+const REGION_LABEL: Record<PriceGuideRegion, string> = {
+  hk_island: "HK Island",
+  kowloon: "Kowloon",
+  new_territories: "NT",
+};
+
 const SIZE_LABELS: Record<FlatSize, string> = {
   studio: "Studio",
   "1bed": "1 bed",
@@ -171,7 +177,7 @@ export default function PriceGuide({
             green: false,
           },
           {
-            label: "Kowloon rental trend",
+            label: `${REGION_LABEL[region]} rental trend`,
             value: TREND_SUMMARY.twelveMonth,
             sub: "year on year",
             green: true,
@@ -179,10 +185,10 @@ export default function PriceGuide({
           {
             label: "Typical gross yield",
             value: "4.1%",
-            sub: "Kowloon average",
+            sub: `${REGION_LABEL[region]} average`,
             green: false,
           },
-        ] as const).map(({ label, value, sub, green }) => (
+        ] as { label: string; value: string; sub: string; green: boolean }[]).map(({ label, value, sub, green }) => (
           <div
             key={label}
             className="rounded-[12px] p-3.5 bg-white flex flex-col gap-1.5"
@@ -326,7 +332,7 @@ export default function PriceGuide({
       {/* ── E: Trend chart ── */}
       <div className="rounded-[12px] p-5 bg-white" style={{ border: "1px solid #E2D9CE" }}>
         <h3 className="font-bold text-[15px] mb-4" style={{ color: "#555555" }}>
-          Rental trend — Kowloon, similar buildings
+          Rental trend — {REGION_LABEL[region]}, similar buildings
         </h3>
         <TrendChart />
         <p className="text-[10px] mt-2" style={{ color: "#9CA3AF" }}>
@@ -374,7 +380,7 @@ export default function PriceGuide({
         style={{ background: "#E4F0EB", border: "1px solid #B0D4C3" }}
       >
         <p className="text-sm leading-relaxed" style={{ color: "#1F5C42" }}>
-          Rents in <strong>{district}</strong> are up{" "}
+          Rents in <strong>{district}</strong> ({REGION_LABEL[region]}) are up{" "}
           <strong>{TREND_SUMMARY.twelveMonth}</strong> year on year, and are{" "}
           <strong>{TREND_SUMMARY.vsPeak2019}</strong> below the 2019 market peak. If
           you&apos;re being quoted above the ranges above, there may be room to
