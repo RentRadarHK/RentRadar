@@ -79,6 +79,12 @@ function toRegion(r: "Kowloon" | "HK Island" | "New Territories"): PriceGuideReg
   return "new_territories";
 }
 
+function regionSlug(r: string): string {
+  if (r === "HK Island") return "hk-island";
+  if (r === "New Territories") return "new-territories";
+  return r.toLowerCase();
+}
+
 const REVIEW_FILTERS = ["All", "By Flat", "Positive", "Critical"] as const;
 type ReviewFilter = (typeof REVIEW_FILTERS)[number];
 
@@ -182,14 +188,24 @@ export default function BuildingProfile({
 
         {/* ── Breadcrumb ── */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-[#6B7280] mb-8 flex-wrap">
-          {[building.market, building.region, building.district].map((crumb) => (
-            <span key={crumb} className="flex items-center gap-1">
-              <a href="#" className="text-[#4D8B6F] hover:underline transition-colors">
-                {crumb}
-              </a>
-              <ChevronRight size={12} className="text-[#9CA3AF]" />
-            </span>
-          ))}
+          <span className="flex items-center gap-1">
+            <Link href="/search" className="text-[#4D8B6F] hover:underline transition-colors">
+              {building.market}
+            </Link>
+            <ChevronRight size={12} className="text-[#9CA3AF]" />
+          </span>
+          <span className="flex items-center gap-1">
+            <Link href={`/search?region=${regionSlug(building.region)}`} className="text-[#4D8B6F] hover:underline transition-colors">
+              {building.region}
+            </Link>
+            <ChevronRight size={12} className="text-[#9CA3AF]" />
+          </span>
+          <span className="flex items-center gap-1">
+            <Link href={`/search?district=${encodeURIComponent(building.district)}`} className="text-[#4D8B6F] hover:underline transition-colors">
+              {building.district}
+            </Link>
+            <ChevronRight size={12} className="text-[#9CA3AF]" />
+          </span>
           <span className="font-medium text-[#555555]">{building.name}</span>
         </nav>
 
@@ -214,13 +230,6 @@ export default function BuildingProfile({
                 <Share2 size={16} className="text-[#6B7280]" />
               </button>
 
-              {/* Photo placeholder */}
-              <div
-                className="w-full h-44 rounded-xl flex items-center justify-center mb-6"
-                style={{ background: "#EDE8E3" }}
-              >
-                <Building2 size={48} style={{ color: "#9CA3AF" }} />
-              </div>
 
               <h1 className="text-3xl sm:text-[36px] font-extrabold text-[#555555] tracking-tight leading-tight mb-2 pr-10">
                 {building.name}

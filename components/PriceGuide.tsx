@@ -38,6 +38,12 @@ const REGION_LABEL: Record<PriceGuideRegion, string> = {
   new_territories: "NT",
 };
 
+const REGION_NOTE_LABEL: Record<PriceGuideRegion, string> = {
+  hk_island: "HK Island",
+  kowloon: "Kowloon",
+  new_territories: "New Territories",
+};
+
 const SIZE_LABELS: Record<FlatSize, string> = {
   studio: "Studio",
   "1bed": "1 bed",
@@ -249,7 +255,7 @@ export default function PriceGuide({
             {sizeData.sqft} · HKD {sizeData.rate}/sqft per month
           </p>
           <p className="text-xs font-medium" style={{ color: "#4D8B6F" }}>
-            {sizeData.note}
+            {sizeData.note.replace(/Kowloon/g, REGION_NOTE_LABEL[region])}
           </p>
         </div>
       </div>
