@@ -601,6 +601,19 @@ export default function BuildingProfile({
                       <h3 className="font-bold text-[#555555] mt-2 text-[15px] leading-snug">
                         {review.headline}
                       </h3>
+                      {(review.unitType || review.floorNumber) && (
+                        <p className="text-xs mt-1.5" style={{ color: "#9CA3AF" }}>
+                          {[
+                            review.unitType === "studio" ? "Studio"
+                              : review.unitType === "1bed" ? "1 bed"
+                              : review.unitType === "2bed" ? "2 bed"
+                              : review.unitType === "3bed" ? "3 bed"
+                              : review.unitType === "4bed+" ? "4 bed+"
+                              : review.unitType,
+                            review.floorNumber,
+                          ].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
                     </div>
 
                     <div

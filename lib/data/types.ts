@@ -66,6 +66,8 @@ export interface Review {
   pros?: string;
   cons?: string;
   verifiedTenant: boolean;
+  unitType?: string;
+  floorNumber?: string;
   buildingDayToDay?: string;
   buildingIssues?: string;
   landlordExperience?: string;

@@ -35,6 +35,7 @@ const REVIEW_DRAFT_KEY = "rr_review_draft";
 type Step = 1 | 2 | 3 | 4;
 type VerifyMethod = "google" | "email" | "document" | null;
 type RentMethod = "direct" | "agent" | "corporate" | null;
+type UnitType = "studio" | "1bed" | "2bed" | "3bed" | "4bed+" | "";
 
 interface SelectedProperty {
   type: "building" | "landlord";
@@ -431,6 +432,8 @@ export default function ReviewForm() {
   const [toYear, setToYear] = useState<number | "current" | "">("current");
   const [rentMethod, setRentMethod] = useState<RentMethod>(null);
   const [stillRenting, setStillRenting] = useState<boolean | null>(null);
+  const [unitType, setUnitType] = useState<UnitType>("");
+  const [floorNumber, setFloorNumber] = useState("");
 
   // Step 3 — ratings
   const [overallRating, setOverallRating] = useState(0);
@@ -558,6 +561,8 @@ export default function ReviewForm() {
       if (draft.toYear !== undefined) setToYear(draft.toYear);
       if (draft.rentMethod !== undefined) setRentMethod(draft.rentMethod);
       if (draft.stillRenting !== undefined) setStillRenting(draft.stillRenting);
+      if (draft.unitType) setUnitType(draft.unitType);
+      if (draft.floorNumber) setFloorNumber(draft.floorNumber);
       if (draft.overallRating) setOverallRating(draft.overallRating);
       if (draft.ratingMaintenance) setRatingMaintenance(draft.ratingMaintenance);
       if (draft.ratingCleanliness) setRatingCleanliness(draft.ratingCleanliness);
@@ -661,6 +666,8 @@ export default function ReviewForm() {
           tenancy_to:            toYear === "current" || toYear === "" ? undefined : Number(toYear),
           currently_renting:     toYear === "current" || stillRenting === true,
           rental_method:         rentMethod,
+          unit_type:             unitType || undefined,
+          floor_number:          floorNumber || undefined,
           rating_overall:                   overallRating,
           rating_maintenance:               ratingMaintenance,
           rating_cleanliness:               ratingCleanliness,
@@ -712,6 +719,8 @@ export default function ReviewForm() {
       toYear,
       rentMethod,
       stillRenting,
+      unitType,
+      floorNumber,
       overallRating,
       ratingMaintenance,
       ratingCleanliness,
@@ -755,6 +764,8 @@ export default function ReviewForm() {
     setToYear("current");
     setRentMethod(null);
     setStillRenting(null);
+    setUnitType("");
+    setFloorNumber("");
     setOverallRating(0);
     setRatingMaintenance(0);
     setRatingCleanliness(0);
@@ -788,7 +799,9 @@ export default function ReviewForm() {
     fromYear !== "" &&
     toYear !== "" &&
     rentMethod !== null &&
-    stillRenting !== null;
+    stillRenting !== null &&
+    unitType !== "" &&
+    floorNumber.trim() !== "";
   const step3Valid =
     overallRating > 0 &&
     ratingMaintenance > 0 &&
@@ -1135,7 +1148,7 @@ export default function ReviewForm() {
                     </div>
 
                     {/* Q3: Still renting */}
-                    <div className="mb-8">
+                    <div className="mb-6">
                       <p className="text-sm font-semibold mb-3" style={{ color: "#555555" }}>
                         Are you still renting there?
                       </p>
@@ -1163,6 +1176,72 @@ export default function ReviewForm() {
                           </button>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Q4: Unit type */}
+                    <div className="mb-6">
+                      <p className="text-sm font-semibold mb-3" style={{ color: "#555555" }}>
+                        Unit type
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {(
+                          [
+                            { value: "studio", label: "Studio" },
+                            { value: "1bed",   label: "1 bed" },
+                            { value: "2bed",   label: "2 bed" },
+                            { value: "3bed",   label: "3 bed" },
+                            { value: "4bed+",  label: "4 bed+" },
+                          ] as { value: UnitType; label: string }[]
+                        ).map(({ value, label }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setUnitType(value)}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-[12px] text-sm font-medium transition-all"
+                            style={{
+                              background: unitType === value ? "#E4F0EB" : "#F5F0E8",
+                              border: `1.5px solid ${unitType === value ? "#555555" : "#E2D9CE"}`,
+                              color: unitType === value ? "#555555" : "#6B7280",
+                            }}
+                          >
+                            <div
+                              className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
+                              style={{
+                                borderColor: unitType === value ? "#555555" : "#D8D8D8",
+                              }}
+                            >
+                              {unitType === value && (
+                                <div
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ background: "#555555" }}
+                                />
+                              )}
+                            </div>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Q5: Floor number */}
+                    <div className="mb-8">
+                      <p className="text-sm font-semibold mb-3" style={{ color: "#555555" }}>
+                        Which floor were you on?
+                      </p>
+                      <input
+                        type="text"
+                        value={floorNumber}
+                        onChange={(e) => setFloorNumber(e.target.value)}
+                        placeholder="e.g. 12/F or G/F"
+                        className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1px solid #E2D9CE",
+                          color: "#555555",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
                     </div>
 
                     <div className="flex gap-3">
