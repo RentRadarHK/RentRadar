@@ -66,6 +66,12 @@ interface ModerationEmailParams {
   propertyName: string;
   propertyType: "building" | "landlord";
   reviewText: string;
+  // Guided review answers
+  buildingDayToDay?: string;
+  buildingIssues?: string;
+  landlordExperience?: string;
+  landlordDeposit?: string;
+  landlordRentAgain?: string;
   ratingOverall: number;
   // Building ratings
   ratingMaintenance?: number;
@@ -170,9 +176,41 @@ export async function sendModerationEmail(params: ModerationEmailParams) {
           </tbody>
         </table>
 
+        ${params.buildingDayToDay || params.buildingIssues ? `
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Building review</p>
+        <div style="background:#F9FAFB;border-left:3px solid #4D8B6F;border-radius:4px;padding:16px 20px;margin-bottom:16px;">
+          ${params.buildingDayToDay ? `
+          <p style="color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px;">What was the building like day-to-day?</p>
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 12px;white-space:pre-wrap;">${params.buildingDayToDay.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          ` : ""}
+          ${params.buildingIssues ? `
+          <p style="color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px;">Building issues</p>
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${params.buildingIssues.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          ` : ""}
+        </div>
+        ` : ""}
+
+        ${params.landlordExperience || params.landlordDeposit || params.landlordRentAgain ? `
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Landlord review</p>
+        <div style="background:#F9FAFB;border-left:3px solid #E8573A;border-radius:4px;padding:16px 20px;margin-bottom:28px;">
+          ${params.landlordExperience ? `
+          <p style="color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px;">How was the landlord to deal with?</p>
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 12px;white-space:pre-wrap;">${params.landlordExperience.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          ` : ""}
+          ${params.landlordDeposit ? `
+          <p style="color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px;">How was the deposit handled?</p>
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 12px;white-space:pre-wrap;">${params.landlordDeposit.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          ` : ""}
+          ${params.landlordRentAgain ? `
+          <p style="color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px;">Would you rent from this landlord again?</p>
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${params.landlordRentAgain.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          ` : ""}
+        </div>
+        ` : `
         <div style="background:#F9FAFB;border-left:3px solid #4D8B6F;border-radius:4px;padding:16px 20px;margin-bottom:28px;">
           <p style="color:#374151;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${params.reviewText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
         </div>
+        `}
 
         <table style="width:100%;border-collapse:collapse;">
           <tr>

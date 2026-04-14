@@ -72,6 +72,12 @@ interface ReviewRow {
   rating_landlord_responsiveness: number | null;
   rating_flat_repairs: number | null;
   rating_would_rent_again: number | null;
+  // Guided review fields
+  building_day_to_day: string | null;
+  building_issues: string | null;
+  landlord_experience: string | null;
+  landlord_deposit: string | null;
+  landlord_rent_again: string | null;
 }
 
 // ── Row mappers ───────────────────────────────────────────────────────────────
@@ -142,15 +148,24 @@ function headlineFromText(text: string): string {
 }
 
 function mapReview(row: ReviewRow): Review {
+  const firstAnswer =
+    row.building_day_to_day ||
+    row.landlord_experience ||
+    row.review_text;
   return {
     id: row.id,
     landlordId: row.landlord_id ?? "",
     buildingId: row.building_id ?? "",
     flatRef: "",
     rating: row.rating_overall,
-    headline: headlineFromText(row.review_text),
+    headline: headlineFromText(firstAnswer),
     body: row.review_text,
     verifiedTenant: row.verified_tenant,
+    buildingDayToDay: row.building_day_to_day ?? undefined,
+    buildingIssues: row.building_issues ?? undefined,
+    landlordExperience: row.landlord_experience ?? undefined,
+    landlordDeposit: row.landlord_deposit ?? undefined,
+    landlordRentAgain: row.landlord_rent_again ?? undefined,
     district: "",
     market: "",
     datePosted: row.created_at,

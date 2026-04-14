@@ -119,6 +119,9 @@ interface LocalReview {
   depositReturn?: number;
   landlordResponsiveness?: number;
   wouldRentAgain?: number;
+  landlordExperience?: string;
+  landlordDeposit?: string;
+  landlordRentAgain?: string;
 }
 
 function relativeTime(dateStr: string): string {
@@ -157,6 +160,9 @@ function toLocalReview(r: Review, index: number): LocalReview {
     depositReturn:          r.dimensions.depositReturn || undefined,
     landlordResponsiveness: r.dimensions.landlordResponsiveness || undefined,
     wouldRentAgain:         r.dimensions.wouldRentAgain || undefined,
+    landlordExperience:     r.landlordExperience,
+    landlordDeposit:        r.landlordDeposit,
+    landlordRentAgain:      r.landlordRentAgain,
   };
 }
 
@@ -651,21 +657,39 @@ export default function LandlordProfile({
                       </h3>
                     </div>
 
-                    <p
-                      className="text-sm text-[#6B7280] leading-relaxed mb-1"
+                    <div
+                      className="mb-1"
                       style={
                         !expanded.has(review.id)
-                          ? {
-                              display: "-webkit-box",
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }
+                          ? { maxHeight: "5.5rem", overflow: "hidden" }
                           : {}
                       }
                     >
-                      {review.text}
-                    </p>
+                      {review.landlordExperience || review.landlordDeposit || review.landlordRentAgain ? (
+                        <>
+                          {review.landlordExperience && (
+                            <div className="mb-3">
+                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>How was the landlord to deal with?</p>
+                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.landlordExperience}</p>
+                            </div>
+                          )}
+                          {review.landlordDeposit && (
+                            <div className="mb-3">
+                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>How was the deposit handled?</p>
+                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.landlordDeposit}</p>
+                            </div>
+                          )}
+                          {review.landlordRentAgain && (
+                            <div>
+                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>Would you rent from this landlord again?</p>
+                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.landlordRentAgain}</p>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-[#6B7280] leading-relaxed">{review.text}</p>
+                      )}
+                    </div>
                     <button
                       onClick={() => toggleExpand(review.id)}
                       className="text-xs font-semibold mb-4 transition-colors"

@@ -603,21 +603,33 @@ export default function BuildingProfile({
                       </h3>
                     </div>
 
-                    <p
-                      className="text-sm text-[#6B7280] leading-relaxed mb-1"
+                    <div
+                      className="mb-1"
                       style={
                         !expanded.has(review.id)
-                          ? {
-                              display: "-webkit-box",
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }
+                          ? { maxHeight: "5.5rem", overflow: "hidden" }
                           : {}
                       }
                     >
-                      {review.body}
-                    </p>
+                      {review.buildingDayToDay || review.buildingIssues ? (
+                        <>
+                          {review.buildingDayToDay && (
+                            <div className="mb-3">
+                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>What was the building like day-to-day?</p>
+                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.buildingDayToDay}</p>
+                            </div>
+                          )}
+                          {review.buildingIssues && (
+                            <div>
+                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>Building issues</p>
+                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.buildingIssues}</p>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-[#6B7280] leading-relaxed">{review.body}</p>
+                      )}
+                    </div>
                     <button
                       onClick={() => toggleExpand(review.id)}
                       className="text-xs font-semibold mb-4 transition-colors"

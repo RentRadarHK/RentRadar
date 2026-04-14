@@ -448,8 +448,12 @@ export default function ReviewForm() {
   const [ratingFlatRepairs, setRatingFlatRepairs] = useState(0);
   const [ratingWouldRentAgain, setRatingWouldRentAgain] = useState(0);
 
-  // Step 4 — story + verify
-  const [reviewBody, setReviewBody] = useState("");
+  // Step 4 — guided review + verify
+  const [buildingDayToDay, setBuildingDayToDay] = useState("");
+  const [buildingIssues, setBuildingIssues] = useState("");
+  const [landlordExperience, setLandlordExperience] = useState("");
+  const [landlordDeposit, setLandlordDeposit] = useState("");
+  const [landlordRentAgain, setLandlordRentAgain] = useState("");
   const [monthlyRent, setMonthlyRent] = useState("");
   const [flatSize, setFlatSize] = useState("");
   const [confirmChecked, setConfirmChecked] = useState(false);
@@ -566,7 +570,11 @@ export default function ReviewForm() {
       if (draft.ratingLandlordResponsiveness) setRatingLandlordResponsiveness(draft.ratingLandlordResponsiveness);
       if (draft.ratingFlatRepairs) setRatingFlatRepairs(draft.ratingFlatRepairs);
       if (draft.ratingWouldRentAgain) setRatingWouldRentAgain(draft.ratingWouldRentAgain);
-      if (draft.reviewBody) setReviewBody(draft.reviewBody);
+      if (draft.buildingDayToDay) setBuildingDayToDay(draft.buildingDayToDay);
+      if (draft.buildingIssues) setBuildingIssues(draft.buildingIssues);
+      if (draft.landlordExperience) setLandlordExperience(draft.landlordExperience);
+      if (draft.landlordDeposit) setLandlordDeposit(draft.landlordDeposit);
+      if (draft.landlordRentAgain) setLandlordRentAgain(draft.landlordRentAgain);
       if (draft.monthlyRent) setMonthlyRent(draft.monthlyRent);
       if (draft.flatSize) setFlatSize(draft.flatSize);
       if (draft.confirmChecked) setConfirmChecked(draft.confirmChecked);
@@ -598,7 +606,9 @@ export default function ReviewForm() {
 
   // ── Word count ─────────────────────────────────────────────────────────────
 
-  const wordCount = reviewBody.trim() === "" ? 0 : reviewBody.trim().split(/\s+/).length;
+  function wc(text: string): number {
+    return text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+  }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
@@ -663,7 +673,11 @@ export default function ReviewForm() {
           rating_landlord_responsiveness:   ratingLandlordResponsiveness,
           rating_flat_repairs:              ratingFlatRepairs,
           rating_would_rent_again:          ratingWouldRentAgain,
-          review_text:           reviewBody,
+          building_day_to_day:   buildingDayToDay || undefined,
+          building_issues:       buildingIssues || undefined,
+          landlord_experience:   landlordExperience || undefined,
+          landlord_deposit:      landlordDeposit || undefined,
+          landlord_rent_again:   landlordRentAgain || undefined,
           monthly_rent:          monthlyRent ? Number(monthlyRent) : undefined,
           flat_size_sqft:        flatSize ? Number(flatSize) : undefined,
           verification_method:   verifyMethod,
@@ -710,7 +724,11 @@ export default function ReviewForm() {
       ratingLandlordResponsiveness,
       ratingFlatRepairs,
       ratingWouldRentAgain,
-      reviewBody,
+      buildingDayToDay,
+      buildingIssues,
+      landlordExperience,
+      landlordDeposit,
+      landlordRentAgain,
       monthlyRent,
       flatSize,
       confirmChecked,
@@ -749,7 +767,11 @@ export default function ReviewForm() {
     setRatingLandlordResponsiveness(0);
     setRatingFlatRepairs(0);
     setRatingWouldRentAgain(0);
-    setReviewBody("");
+    setBuildingDayToDay("");
+    setBuildingIssues("");
+    setLandlordExperience("");
+    setLandlordDeposit("");
+    setLandlordRentAgain("");
     setMonthlyRent("");
     setFlatSize("");
     setConfirmChecked(false);
@@ -780,8 +802,11 @@ export default function ReviewForm() {
     ratingLandlordResponsiveness > 0 &&
     ratingFlatRepairs > 0 &&
     ratingWouldRentAgain > 0;
+  const buildingAnswered = wc(buildingDayToDay) >= 15 || wc(buildingIssues) >= 5;
+  const landlordAnswered = wc(landlordExperience) >= 15 || wc(landlordDeposit) >= 5 || wc(landlordRentAgain) >= 5;
   const step4Valid =
-    wordCount >= 50 &&
+    buildingAnswered &&
+    landlordAnswered &&
     confirmChecked &&
     verifyMethod !== null &&
     (verifyMethod !== "email" || verifyEmail.trim().length > 0);
@@ -1342,27 +1367,36 @@ export default function ReviewForm() {
                   transition={{ duration: 0.35, ease: EASE }}
                   className="flex flex-col gap-5"
                 >
-                  {/* Card A: Your experience */}
+                  {/* Card A: About the building */}
                   <div
                     className="bg-white rounded-[16px] p-6 sm:p-8"
                     style={{ border: "0.5px solid #E2D9CE" }}
                   >
-                    <h2 className="text-xl font-extrabold mb-1" style={{ color: "#555555" }}>
-                      What should the next tenant know?
-                    </h2>
-                    <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
-                      Be specific about what happened — dates, amounts, how issues were handled.
-                      The more detail, the more helpful.
-                    </p>
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="text-xl font-extrabold" style={{ color: "#555555" }}>
+                        About the building
+                      </h2>
+                      <span
+                        className="px-2 py-0.5 rounded-full font-semibold shrink-0 ml-3"
+                        style={{ background: "#E4F0EB", color: "#1F5C42", fontSize: "11px" }}
+                      >
+                        Appears on building profile
+                      </span>
+                    </div>
 
-                    {/* Textarea */}
-                    <div className="relative mb-2">
+                    {/* Q1 */}
+                    <div className="mb-5">
+                      <label className="text-sm font-semibold block mb-1" style={{ color: "#555555" }}>
+                        What was the building like day-to-day?
+                      </label>
+                      <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                        Lifts, cleanliness, noise, common areas, pest control — anything a future tenant should know.
+                      </p>
                       <textarea
-                        value={reviewBody}
-                        onChange={(e) => setReviewBody(e.target.value)}
-                        placeholder="Share your experience as a tenant..."
-                        rows={6}
-                        maxLength={3000}
+                        value={buildingDayToDay}
+                        onChange={(e) => setBuildingDayToDay(e.target.value)}
+                        rows={4}
+                        maxLength={2000}
                         className="w-full px-4 py-3.5 rounded-[12px] text-sm resize-none outline-none transition-all"
                         style={{
                           background: "#F5F0E8",
@@ -1373,20 +1407,196 @@ export default function ReviewForm() {
                         onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
                         onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
                       />
-                    </div>
-                    <div className="flex justify-end mb-5">
-                      <motion.span
-                        className="flex items-center gap-1.5 text-xs font-semibold"
-                        style={{ color: wordCount >= 50 ? "#555555" : "#9CA3AF" }}
-                        animate={{ color: wordCount >= 50 ? "#555555" : "#9CA3AF" }}
-                      >
-                        {wordCount >= 50 && <Check size={12} />}
-                        {wordCount} / 50 words minimum
-                      </motion.span>
+                      <div className="flex justify-end mt-1">
+                        <motion.span
+                          className="flex items-center gap-1.5 text-xs font-semibold"
+                          style={{ color: wc(buildingDayToDay) >= 15 ? "#555555" : "#9CA3AF" }}
+                          animate={{ color: wc(buildingDayToDay) >= 15 ? "#555555" : "#9CA3AF" }}
+                        >
+                          {wc(buildingDayToDay) >= 15 && <Check size={12} />}
+                          {wc(buildingDayToDay)} / 15 words minimum
+                        </motion.span>
+                      </div>
                     </div>
 
+                    {/* Q2 */}
+                    <div>
+                      <label className="text-sm font-semibold block mb-1" style={{ color: "#555555" }}>
+                        Describe any issues with the building
+                      </label>
+                      <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                        Be specific — this helps future tenants most. Write &apos;No significant issues&apos; if none.
+                      </p>
+                      <textarea
+                        value={buildingIssues}
+                        onChange={(e) => setBuildingIssues(e.target.value)}
+                        rows={3}
+                        maxLength={2000}
+                        className="w-full px-4 py-3.5 rounded-[12px] text-sm resize-none outline-none transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1.5px solid #E2D9CE",
+                          color: "#555555",
+                          lineHeight: "1.6",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
+                      <div className="flex justify-end mt-1">
+                        <motion.span
+                          className="flex items-center gap-1.5 text-xs font-semibold"
+                          style={{ color: wc(buildingIssues) >= 5 ? "#555555" : "#9CA3AF" }}
+                          animate={{ color: wc(buildingIssues) >= 5 ? "#555555" : "#9CA3AF" }}
+                        >
+                          {wc(buildingIssues) >= 5 && <Check size={12} />}
+                          {wc(buildingIssues)} / 5 words minimum
+                        </motion.span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card B: About the landlord */}
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="text-xl font-extrabold" style={{ color: "#555555" }}>
+                        About the landlord
+                      </h2>
+                      <span
+                        className="px-2 py-0.5 rounded-full font-semibold shrink-0 ml-3"
+                        style={{ background: "#FDE8E3", color: "#A83820", fontSize: "11px" }}
+                      >
+                        Appears on landlord profile
+                      </span>
+                    </div>
+
+                    {/* Q3 */}
+                    <div className="mb-5">
+                      <label className="text-sm font-semibold block mb-1" style={{ color: "#555555" }}>
+                        How was the landlord to deal with?
+                      </label>
+                      <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                        Communication, responsiveness, maintenance requests — what was it actually like?
+                      </p>
+                      <textarea
+                        value={landlordExperience}
+                        onChange={(e) => setLandlordExperience(e.target.value)}
+                        rows={4}
+                        maxLength={2000}
+                        className="w-full px-4 py-3.5 rounded-[12px] text-sm resize-none outline-none transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1.5px solid #E2D9CE",
+                          color: "#555555",
+                          lineHeight: "1.6",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
+                      <div className="flex justify-end mt-1">
+                        <motion.span
+                          className="flex items-center gap-1.5 text-xs font-semibold"
+                          style={{ color: wc(landlordExperience) >= 15 ? "#555555" : "#9CA3AF" }}
+                          animate={{ color: wc(landlordExperience) >= 15 ? "#555555" : "#9CA3AF" }}
+                        >
+                          {wc(landlordExperience) >= 15 && <Check size={12} />}
+                          {wc(landlordExperience)} / 15 words minimum
+                        </motion.span>
+                      </div>
+                    </div>
+
+                    {/* Q4 */}
+                    <div className="mb-5">
+                      <label className="text-sm font-semibold block mb-1" style={{ color: "#555555" }}>
+                        How was the deposit handled?
+                      </label>
+                      <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                        Was it returned in full? How long did it take? Were any deductions fair?
+                      </p>
+                      <textarea
+                        value={landlordDeposit}
+                        onChange={(e) => setLandlordDeposit(e.target.value)}
+                        rows={3}
+                        maxLength={2000}
+                        className="w-full px-4 py-3.5 rounded-[12px] text-sm resize-none outline-none transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1.5px solid #E2D9CE",
+                          color: "#555555",
+                          lineHeight: "1.6",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
+                      <div className="flex justify-end mt-1">
+                        <motion.span
+                          className="flex items-center gap-1.5 text-xs font-semibold"
+                          style={{ color: wc(landlordDeposit) >= 5 ? "#555555" : "#9CA3AF" }}
+                          animate={{ color: wc(landlordDeposit) >= 5 ? "#555555" : "#9CA3AF" }}
+                        >
+                          {wc(landlordDeposit) >= 5 && <Check size={12} />}
+                          {wc(landlordDeposit)} / 5 words minimum
+                        </motion.span>
+                      </div>
+                    </div>
+
+                    {/* Q5 */}
+                    <div>
+                      <label className="text-sm font-semibold block mb-1" style={{ color: "#555555" }}>
+                        Would you rent from this landlord again?
+                      </label>
+                      <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                        One sentence is fine.
+                      </p>
+                      <textarea
+                        value={landlordRentAgain}
+                        onChange={(e) => setLandlordRentAgain(e.target.value)}
+                        rows={2}
+                        maxLength={500}
+                        className="w-full px-4 py-3.5 rounded-[12px] text-sm resize-none outline-none transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1.5px solid #E2D9CE",
+                          color: "#555555",
+                          lineHeight: "1.6",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
+                      <div className="flex justify-end mt-1">
+                        <motion.span
+                          className="flex items-center gap-1.5 text-xs font-semibold"
+                          style={{ color: wc(landlordRentAgain) >= 5 ? "#555555" : "#9CA3AF" }}
+                          animate={{ color: wc(landlordRentAgain) >= 5 ? "#555555" : "#9CA3AF" }}
+                        >
+                          {wc(landlordRentAgain) >= 5 && <Check size={12} />}
+                          {wc(landlordRentAgain)} / 5 words minimum
+                        </motion.span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Minimum answers note */}
+                  <p className="text-xs text-center px-2" style={{ color: "#6B7280" }}>
+                    Answer at least one building question and one landlord question to post your review.
+                  </p>
+
+                  {/* Card C: Verify identity */}
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <h2 className="text-lg font-extrabold mb-1" style={{ color: "#555555" }}>
+                      One last step — verify it&apos;s you
+                    </h2>
+                    <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
+                      Your identity is never shown publicly.
+                    </p>
+
                     {/* Optional fields */}
-                    <div className="flex gap-3 mb-5">
+                    <div className="flex gap-3 mb-2">
                       <div className="flex-1">
                         <label className="text-xs font-semibold block mb-1.5" style={{ color: "#6B7280" }}>
                           Monthly rent paid (HKD)
@@ -1430,7 +1640,7 @@ export default function ReviewForm() {
                     <button
                       type="button"
                       onClick={() => setConfirmChecked(!confirmChecked)}
-                      className="flex items-start gap-3 text-left w-full"
+                      className="flex items-start gap-3 text-left w-full mb-5"
                     >
                       <div
                         className="w-5 h-5 rounded-[5px] border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all"
@@ -1446,19 +1656,6 @@ export default function ReviewForm() {
                         not contain false statements.
                       </span>
                     </button>
-                  </div>
-
-                  {/* Card B: Verify identity */}
-                  <div
-                    className="bg-white rounded-[16px] p-6 sm:p-8"
-                    style={{ border: "0.5px solid #E2D9CE" }}
-                  >
-                    <h2 className="text-lg font-extrabold mb-1" style={{ color: "#555555" }}>
-                      One last step — verify it&apos;s you
-                    </h2>
-                    <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
-                      Your identity is never shown publicly.
-                    </p>
 
                     <div className="flex flex-col gap-3">
                       {/* Google */}

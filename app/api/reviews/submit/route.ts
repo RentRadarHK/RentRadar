@@ -24,7 +24,12 @@ interface SubmitBody {
   rating_landlord_responsiveness?: number;
   rating_flat_repairs?: number;
   rating_would_rent_again?: number;
-  review_text: string;
+  review_text?: string;
+  building_day_to_day?: string;
+  building_issues?: string;
+  landlord_experience?: string;
+  landlord_deposit?: string;
+  landlord_rent_again?: string;
   monthly_rent?: number;
   flat_size_sqft?: number;
   verification_method: "google" | "email" | "document";
@@ -34,11 +39,20 @@ interface SubmitBody {
   document_filename?: string;
 }
 
+function wc(text: string | undefined): number {
+  if (!text || text.trim() === "") return 0;
+  return text.trim().split(/\s+/).length;
+}
+
 function validate(body: SubmitBody): string | null {
   if (!body.building_id && !body.landlord_id)
     return "building_id or landlord_id is required";
-  if (!body.review_text || body.review_text.trim().split(/\s+/).length < 50)
-    return "Review must be at least 50 words";
+  const buildingOk = wc(body.building_day_to_day) >= 15 || wc(body.building_issues) >= 5;
+  const landlordOk = wc(body.landlord_experience) >= 15 || wc(body.landlord_deposit) >= 5 || wc(body.landlord_rent_again) >= 5;
+  if (!buildingOk)
+    return "Please answer at least one building question (minimum word count not met)";
+  if (!landlordOk)
+    return "Please answer at least one landlord question (minimum word count not met)";
   if (!body.rating_overall || body.rating_overall < 1 || body.rating_overall > 5)
     return "rating_overall must be 1–5";
   if (!["google", "email", "document"].includes(body.verification_method))
@@ -117,6 +131,14 @@ export async function POST(req: NextRequest) {
   // ── Insert review ─────────────────────────────────────────────────────────
   const moderationToken = crypto.randomUUID();
 
+  const generatedReviewText = [
+    body.building_day_to_day,
+    body.building_issues,
+    body.landlord_experience,
+    body.landlord_deposit,
+    body.landlord_rent_again,
+  ].filter(Boolean).join("\n\n");
+
   const reviewRecord = {
     building_id:           body.building_id ?? null,
     landlord_id:           body.landlord_id ?? null,
@@ -136,7 +158,12 @@ export async function POST(req: NextRequest) {
     rating_landlord_responsiveness: body.rating_landlord_responsiveness ?? null,
     rating_flat_repairs:            body.rating_flat_repairs ?? null,
     rating_would_rent_again:        body.rating_would_rent_again ?? null,
-    review_text:           body.review_text,
+    review_text:           generatedReviewText,
+    building_day_to_day:   body.building_day_to_day ?? null,
+    building_issues:       body.building_issues ?? null,
+    landlord_experience:   body.landlord_experience ?? null,
+    landlord_deposit:      body.landlord_deposit ?? null,
+    landlord_rent_again:   body.landlord_rent_again ?? null,
     monthly_rent:          body.monthly_rent ?? null,
     flat_size_sqft:        body.flat_size_sqft ?? null,
     verification_method:   body.verification_method,
@@ -217,7 +244,12 @@ export async function POST(req: NextRequest) {
       moderationToken,
       propertyName,
       propertyType,
-      reviewText:                     body.review_text,
+      reviewText:                     generatedReviewText,
+      buildingDayToDay:               body.building_day_to_day,
+      buildingIssues:                 body.building_issues,
+      landlordExperience:             body.landlord_experience,
+      landlordDeposit:                body.landlord_deposit,
+      landlordRentAgain:              body.landlord_rent_again,
       ratingOverall:                  body.rating_overall,
       ratingMaintenance:              body.rating_maintenance,
       ratingCleanliness:              body.rating_cleanliness,
