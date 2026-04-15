@@ -1,3 +1,4 @@
+// DEPRECATED — do not use, all data from Supabase
 import { Building } from "./types";
 
 export const buildings: Building[] = [

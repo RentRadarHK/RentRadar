@@ -1,3 +1,4 @@
+// DEPRECATED — do not use, all data from Supabase
 import { Review } from "./types";
 
 // Helper for mock dimensions — building scores default to 3, landlord scores specified

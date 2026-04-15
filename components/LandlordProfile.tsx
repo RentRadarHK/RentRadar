@@ -14,7 +14,6 @@ import {
   Shield,
   MapPin,
   ArrowRight,
-  Sparkles,
   PenLine,
 } from "lucide-react";
 import Link from "next/link";
@@ -22,89 +21,6 @@ import { Building, Landlord, Review } from "@/lib/data/types";
 import GovDataBadge from "./GovDataBadge";
 import PriceGuide, { PriceGuideRegion } from "./PriceGuide";
 
-// ── Mock Data ───────────────────────────────────────────────────────────────
-
-const landlord = {
-  name: "Pacific Realty Holdings Ltd",
-  address: "Flat 12B, Harbour View Tower, 18 Hoi Fai Road, Tai Kok Tsui, Kowloon, Hong Kong",
-  rating: 3.8,
-  reviewCount: 47,
-  memberSince: 2019,
-  market: "Hong Kong",
-  verified: false,
-  propertiesListed: 3,
-};
-
-const ratingDimensions = [
-  { label: "Deposit return", score: 2.9 },
-  { label: "Responsiveness", score: 4.1 },
-  { label: "Listing accuracy", score: 3.6 },
-  { label: "Maintenance & repairs", score: 3.2 },
-  { label: "Renewal fairness", score: 4.4 },
-];
-
-const aiSummary =
-  "Tenants report mixed experiences with Pacific Realty Holdings. Communication is generally responsive, with most queries answered within 24 hours. However, deposit returns have been a consistent concern — 14 of 47 reviewers reported deductions they considered unfair or unexplained. Maintenance response times vary significantly by property. Overall, tenants recommend conducting a thorough check-in inspection and documenting all pre-existing issues before signing.";
-
-const redFlags = [
-  { text: "Deposit disputes reported", count: 14 },
-  { text: "Delayed maintenance response", count: 8 },
-  { text: "Property condition below listing standard", count: 6 },
-];
-
-const reviews = [
-  {
-    id: 1,
-    stars: 2,
-    headline: "Deposit nightmare",
-    text: "Moved out in perfect condition, had photos of everything. Still had HKD 8,000 deducted with no explanation. Took 3 months and multiple follow-ups to get any response. Would not rent again.",
-    location: "Tai Kok Tsui",
-    timeAgo: "3 weeks ago",
-    category: "deposit",
-  },
-  {
-    id: 2,
-    stars: 5,
-    headline: "Great experience overall",
-    text: "Responsive landlord, fixed our AC within 2 days of reporting. Deposit returned in full within 2 weeks of moving out. Would happily rent from them again.",
-    location: "Mong Kok",
-    timeAgo: "2 months ago",
-    category: "positive",
-  },
-  {
-    id: 3,
-    stars: 3,
-    headline: "Average — communication good, maintenance slow",
-    text: "Easy to reach by WhatsApp, which is a plus. But getting repairs actually done took weeks. Deposit returned but with a small deduction we didn't agree with.",
-    location: "Tai Kok Tsui",
-    timeAgo: "4 months ago",
-    category: "maintenance",
-  },
-  {
-    id: 4,
-    stars: 1,
-    headline: "Entered flat without notice",
-    text: "Landlord entered the property multiple times without giving proper notice. Very uncomfortable experience. Raised it and was dismissed. Would strongly warn others.",
-    location: "Sham Shui Po",
-    timeAgo: "5 months ago",
-    category: "critical",
-  },
-  {
-    id: 5,
-    stars: 4,
-    headline: "Fair landlord, minor issues",
-    text: "Generally positive. A couple of maintenance things took longer than expected but always resolved eventually. Renewal was offered at fair market rate.",
-    location: "Tai Kok Tsui",
-    timeAgo: "7 months ago",
-    category: "positive",
-  },
-];
-
-const similarProperties = [
-  { address: "Unit 8A, Metro Residences, 22 Cherry St", rating: 4.1, reviews: 31 },
-  { address: "Flat 3C, Harbour View Court, 9 Hoi Ting Rd", rating: 3.5, reviews: 18 },
-  { address: "Studio 14, Tai Kok Tsui Mansions, 41 Pine Ave", rating: 4.6, reviews: 22 },
-];
 
 // ── LocalReview — unified shape used for both mock data and Supabase data ────
 
@@ -249,11 +165,8 @@ function cardFadeProps(delay = 0) {
 // ── Main Component ───────────────────────────────────────────────────────────
 
 interface Props {
-  /** Real landlord from Supabase; falls back to hardcoded mock when omitted */
   landlordData?: Landlord;
-  /** Real reviews from Supabase; falls back to hardcoded mock when omitted */
   landlordReviews?: Review[];
-  /** Address of the primary property (derived from first linked building) */
   primaryAddress?: string;
   linkedBuildings?: Building[];
 }
@@ -268,20 +181,41 @@ export default function LandlordProfile({
   const [expanded, setExpanded] = useState<Set<number | string>>(new Set());
   const [priceGuideOpen, setPriceGuideOpen] = useState(false);
 
-  // ── Data resolution: Supabase props > hardcoded mock ──────────────────────
+  if (!landlordData) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-5"
+        style={{ background: "#F5F0E8" }}
+      >
+        <div className="text-center max-w-sm">
+          <h1 className="text-2xl font-bold mb-2" style={{ color: "#555555" }}>
+            Landlord not found
+          </h1>
+          <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
+            This landlord profile doesn&apos;t exist or has been removed.
+          </p>
+          <Link
+            href="/search"
+            className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-[10px] transition-colors"
+            style={{ background: "#4D8B6F", color: "#fff" }}
+          >
+            Browse all landlords →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  const landlordDisplay = landlordData
-    ? {
-        name: landlordData.name,
-        address: primaryAddress ?? landlordData.name,
-        rating: landlordData.avgRating,
-        reviewCount: landlordData.totalReviews,
-        memberSince: parseInt(landlordData.activeSince, 10) || 2019,
-        market: landlordData.activeMarkets[0] ?? "Hong Kong",
-        verified: landlordData.verified,
-        propertiesListed: landlordData.totalProperties,
-      }
-    : landlord;
+  const landlordDisplay = {
+    name: landlordData.name,
+    address: primaryAddress ?? landlordData.name,
+    rating: landlordData.avgRating,
+    reviewCount: landlordData.totalReviews,
+    memberSince: parseInt(landlordData.activeSince, 10) || 2019,
+    market: landlordData.activeMarkets[0] ?? "Hong Kong",
+    verified: landlordData.verified,
+    propertiesListed: landlordData.totalProperties,
+  };
 
   function avgDimension(fn: (r: Review) => number): number {
     if (!landlordReviews || landlordReviews.length === 0) return 0;
@@ -306,15 +240,13 @@ export default function LandlordProfile({
         { label: "Maintenance & repairs",score: landlordData.ratings.maintenance },
         { label: "Renewal fairness",     score: landlordData.ratings.renewalFairness },
       ]
-    : ratingDimensions;
+    : [];
 
   const localReviews: LocalReview[] = landlordReviews && landlordReviews.length > 0
     ? landlordReviews.map(toLocalReview)
-    : (reviews as LocalReview[]);
+    : [];
 
-  const redFlagsDisplay = landlordReviews && landlordReviews.length > 0
-    ? computeRedFlags(landlordReviews)
-    : redFlags;
+  const redFlagsDisplay = computeRedFlags(landlordReviews ?? []);
 
   const visibleReviews = filterReviews(localReviews, activeFilter);
 
@@ -336,14 +268,12 @@ export default function LandlordProfile({
 
         {/* ── 1. Breadcrumb ── */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-[#6B7280] mb-8 flex-wrap">
-          {["Hong Kong", "Kowloon", "Tai Kok Tsui"].map((crumb) => (
-            <span key={crumb} className="flex items-center gap-1">
-              <a href="#" className="text-[#4D8B6F] hover:underline transition-colors">
-                {crumb}
-              </a>
-              <ChevronRight size={12} className="text-[#9CA3AF]" />
-            </span>
-          ))}
+          <span className="flex items-center gap-1">
+            <Link href="/search" className="text-[#4D8B6F] hover:underline transition-colors">
+              {landlordData.activeMarkets[0] ?? "Hong Kong"}
+            </Link>
+            <ChevronRight size={12} className="text-[#9CA3AF]" />
+          </span>
           <span className="font-medium text-[#555555]">{landlordDisplay.name}</span>
         </nav>
 
@@ -523,62 +453,42 @@ export default function LandlordProfile({
               )}
             </motion.div>
 
-            {/* ── 4. AI Summary ── */}
-            <motion.div
-              {...cardFadeProps(0.05)}
-              className="rounded-[16px] p-8"
-              style={{
-                background: "#F5F0E8",
-                borderLeft: "4px solid #555555",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-              }}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles size={14} className="text-[#4D8B6F]" />
-                <span
-                  className="text-[11px] font-bold uppercase tracking-widest"
-                  style={{ color: "#4D8B6F" }}
-                >
-                  RentRadar AI Summary
-                </span>
-              </div>
-              <p className="text-sm text-[#6B7280] leading-[1.75]">{aiSummary}</p>
-            </motion.div>
-
-            {/* ── 5. Red Flags ── */}
-            <motion.div
-              {...cardFadeProps(0.05)}
-              className="rounded-[16px] p-8"
-              style={{
-                background: "#FDE8E3",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                borderLeft: "4px solid #E8573A",
-              }}
-            >
-              <h2 className="text-lg font-bold text-[#555555] mb-5 flex items-center gap-2.5">
-                <AlertTriangle size={18} style={{ color: "#E8573A" }} />
-                Tenant Red Flags
-              </h2>
-              <div className="flex flex-wrap gap-2.5 mb-4">
-                {redFlagsDisplay.map(({ text, count }) => (
-                  <span
-                    key={text}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-full"
-                    style={{
-                      background: "#FDE8E3",
-                      border: "1px solid #F5C4B3",
-                      color: "#A83820",
-                    }}
-                  >
-                    <AlertTriangle size={11} />
-                    {text} ({count} reviews)
-                  </span>
-                ))}
-              </div>
-              <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                Red flags are identified automatically from verified review content
-              </p>
-            </motion.div>
+            {/* ── 5. Red Flags — only shown when derived from real reviews ── */}
+            {redFlagsDisplay.length > 0 && (
+              <motion.div
+                {...cardFadeProps(0.05)}
+                className="rounded-[16px] p-8"
+                style={{
+                  background: "#FDE8E3",
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+                  borderLeft: "4px solid #E8573A",
+                }}
+              >
+                <h2 className="text-lg font-bold text-[#555555] mb-5 flex items-center gap-2.5">
+                  <AlertTriangle size={18} style={{ color: "#E8573A" }} />
+                  Tenant Red Flags
+                </h2>
+                <div className="flex flex-wrap gap-2.5 mb-4">
+                  {redFlagsDisplay.map(({ text, count }) => (
+                    <span
+                      key={text}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-full"
+                      style={{
+                        background: "#FDE8E3",
+                        border: "1px solid #F5C4B3",
+                        color: "#A83820",
+                      }}
+                    >
+                      <AlertTriangle size={11} />
+                      {text} ({count} reviews)
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                  Red flags are identified automatically from verified review content
+                </p>
+              </motion.div>
+            )}
 
             {/* ── Write a Review Banner ── */}
             <div
@@ -594,7 +504,7 @@ export default function LandlordProfile({
                 </p>
               </div>
               <Link
-                href={`/review?landlord=${landlordData?.id ?? "pacific-realty-holdings"}`}
+                href={`/review?landlord=${landlordData.id}`}
                 className="shrink-0 inline-flex items-center gap-2 font-bold text-sm px-6 py-3 rounded-[12px] transition-colors text-white"
                 style={{ border: "1.5px solid rgba(255,255,255,0.6)" }}
                 onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.12)")}
@@ -822,7 +732,7 @@ export default function LandlordProfile({
                 </p>
               </div>
               <Link
-                href={`/review?landlord=${landlordData?.id ?? "pacific-realty-holdings"}`}
+                href={`/review?landlord=${landlordData.id}`}
                 className="shrink-0 font-bold text-sm px-7 py-3.5 rounded-[12px] transition-colors"
                 style={{ background: "#fff", color: "#555555" }}
                 onMouseEnter={(e) =>
@@ -869,7 +779,7 @@ export default function LandlordProfile({
                 ))}
               </div>
               <Link
-                href={`/review?landlord=${landlordData?.id ?? "pacific-realty-holdings"}`}
+                href={`/review?landlord=${landlordData.id}`}
                 className="w-full text-white font-semibold text-sm py-3.5 rounded-[12px] mb-3 transition-colors flex items-center justify-center"
                 style={{ background: "#4D8B6F" }}
                 onMouseEnter={(e) =>
@@ -983,46 +893,6 @@ export default function LandlordProfile({
                 </div>
               </motion.div>
             )}
-
-            {/* ── 10. Similar Properties ── */}
-            <motion.div
-              {...cardFadeProps(0.2)}
-              className="bg-white rounded-[16px] p-6"
-              style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
-            >
-              <h3 className="font-bold text-[#555555] mb-4">Also in Tai Kok Tsui</h3>
-              <div className="flex flex-col">
-                {similarProperties.map((prop, i) => (
-                  <a
-                    key={i}
-                    href="#"
-                    className="flex items-center justify-between py-3.5 gap-3 group"
-                    style={
-                      i < similarProperties.length - 1
-                        ? { borderBottom: "1px solid #F5F0E8" }
-                        : {}
-                    }
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#555555] truncate mb-1">
-                        {prop.address}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <StarRating stars={Math.round(prop.rating)} size={11} />
-                        <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                          {prop.rating} · {prop.reviews} reviews
-                        </span>
-                      </div>
-                    </div>
-                    <ArrowRight
-                      size={14}
-                      className="shrink-0 transition-transform duration-150 group-hover:translate-x-0.5"
-                      style={{ color: "#4D8B6F" }}
-                    />
-                  </a>
-                ))}
-              </div>
-            </motion.div>
 
           </div>
         </div>

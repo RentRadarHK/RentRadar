@@ -263,7 +263,7 @@ export default function AboutPage() {
             Ready to search your landlord?
           </h2>
           <p className="text-white/70 mb-8 leading-relaxed">
-            51,000+ buildings, verified government data, and honest tenant reviews.
+            6,611+ HK Island buildings, verified government data, and honest tenant reviews.
           </p>
           <Link
             href="/search"

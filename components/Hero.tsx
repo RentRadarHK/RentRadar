@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { unifiedSearch } from "@/lib/data/search";
+import { searchAll } from "@/lib/supabase/queries";
 import type { SearchResult } from "@/lib/data/types";
 import SkylineIllustration from "@/components/SkylineIllustration";
 
@@ -41,14 +41,23 @@ export default function Hero() {
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
     setQuery(val);
-    if (val.trim().length >= 2) {
-      setResults(unifiedSearch(val));
-      setShowDropdown(true);
-    } else {
+    if (val.trim().length < 2) {
       setResults([]);
       setShowDropdown(false);
     }
   }
+
+  useEffect(() => {
+    if (query.trim().length < 2) return;
+    const timer = setTimeout(() => {
+      searchAll(query).then(({ buildings, landlords }) => {
+        const combined = [...buildings.slice(0, 5), ...landlords.slice(0, 3)];
+        setResults(combined);
+        setShowDropdown(combined.length > 0);
+      }).catch(() => {});
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   function handleSearch() {
     if (!query.trim()) return;

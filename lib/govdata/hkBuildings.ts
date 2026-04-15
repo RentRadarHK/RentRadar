@@ -1,3 +1,4 @@
+// DEPRECATED — do not use, all data from Supabase
 import { StatutoryOrder } from "@/lib/data/types";
 
 export interface GovBuildingData {

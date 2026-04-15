@@ -1,3 +1,4 @@
+// DEPRECATED — do not use, all search via Supabase (lib/supabase/queries.ts searchAll)
 import { SearchResult } from "./types";
 import { buildings } from "./buildings";
 import { landlords } from "./landlords";

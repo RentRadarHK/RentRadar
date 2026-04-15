@@ -10,7 +10,8 @@
       "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.dependencies, null, 2\\)\\)\")",
       "Bash(dir \"C:\\\\Users\\\\Joe Alim\\\\.claude\\\\projects\\\\C--Users-Joe-Alim-rentradar\\\\memory\")",
       "Bash(python3 -c ':*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(node -e ':*)"
     ]
   }
 }

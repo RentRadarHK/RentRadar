@@ -1,3 +1,4 @@
+// DEPRECATED — do not use, all data from Supabase
 import { Landlord } from "./types";
 
 export const landlords: Landlord[] = [

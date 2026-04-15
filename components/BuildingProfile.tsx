@@ -1,7 +1,7 @@
 ﻿"use client";
 
 // Write a Review links to /review?building=[id] — verified April 2026
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -23,10 +23,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Building, Landlord, Review } from "@/lib/data/types";
-import { getLandlordById } from "@/lib/data/landlords";
-import { getReviewsByBuildingId } from "@/lib/data/reviews";
-// Pre-fetched props from the server page (Supabase) take priority over mock data
-import { fetchBuildingData, GovBuildingData } from "@/lib/govdata/hkBuildings";
 import GovDataBadge from "./GovDataBadge";
 import PriceGuide, { PriceGuideRegion } from "./PriceGuide";
 
@@ -101,39 +97,12 @@ function filterReviews(list: Review[], filter: ReviewFilter): Review[] {
   }
 }
 
-// ── Loading Skeleton ──────────────────────────────────────────────────────────
-
-function Skeleton({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse rounded-md ${className ?? ""}`}
-      style={{ background: "#E2D9CE" }}
-    />
-  );
-}
-
-function GovDataSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-xl p-4" style={{ background: "#E4F0EB" }}>
-            <Skeleton className="h-3 w-20 mb-2" />
-            <Skeleton className="h-5 w-32" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
 interface BuildingProfileProps {
   building: Building;
-  /** Pre-fetched reviews from Supabase (falls back to mock data if omitted) */
   reviews?: Review[];
-  /** Pre-fetched landlords from Supabase (falls back to mock data if omitted) */
   linkedLandlords?: Landlord[];
 }
 
@@ -142,33 +111,18 @@ export default function BuildingProfile({
   reviews: propReviews,
   linkedLandlords: propLandlords,
 }: BuildingProfileProps) {
-  const [govData, setGovData] = useState<GovBuildingData | null>(null);
-  const [govLoading, setGovLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<ReviewFilter>("All");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"overview" | "price-guide">("overview");
 
-  // Use Supabase data when provided; fall back to local mock data
-  const buildingReviews = propReviews ?? getReviewsByBuildingId(building.id);
+  const buildingReviews = propReviews ?? [];
   const visibleReviews = filterReviews(buildingReviews, activeFilter);
-
-  const linkedLandlords =
-    propLandlords ??
-    building.landlords
-      .map((id) => getLandlordById(id))
-      .filter((l): l is Landlord => l !== undefined);
+  const linkedLandlords = propLandlords ?? [];
 
   const permitYear = new Date(building.occupationPermitDate).getFullYear();
   const hasOutstandingOrders = building.statutoryOrders.some(
     (o) => o.status === "Outstanding"
   );
-
-  useEffect(() => {
-    fetchBuildingData(building.address).then((data) => {
-      setGovData(data);
-      setGovLoading(false);
-    });
-  }, [building.address]);
 
   function toggleExpand(id: string) {
     setExpanded((prev) => {
@@ -343,31 +297,25 @@ export default function BuildingProfile({
                 </span>
               </div>
 
-              {govLoading ? (
-                <GovDataSkeleton />
-              ) : govData ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { label: "Occupation Permit", value: govData.occupationPermitNumber },
-                    { label: "Permit Issued", value: formatDate(govData.occupationPermitDate) },
-                    { label: "Building Type", value: `${govData.buildingType} · ${govData.buildingUsage}` },
-                    { label: "Block ID", value: govData.blockId },
-                  ].map(({ label, value }) => (
-                    <div
-                      key={label}
-                      className="rounded-xl p-4"
-                      style={{ background: "#fff" }}
-                    >
-                      <p className="text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#9CA3AF" }}>
-                        {label}
-                      </p>
-                      <p className="text-sm font-bold text-[#555555]">{value}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-[#6B7280]">Government data unavailable for this address.</p>
-              )}
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: "Occupation Permit", value: building.occupationPermitNumber },
+                  { label: "Permit Issued", value: formatDate(building.occupationPermitDate) },
+                  { label: "Building Type", value: building.buildingType },
+                  { label: "Block ID", value: building.blockId },
+                ].map(({ label, value }) => (
+                  <div
+                    key={label}
+                    className="rounded-xl p-4"
+                    style={{ background: "#fff" }}
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#9CA3AF" }}>
+                      {label}
+                    </p>
+                    <p className="text-sm font-bold text-[#555555]">{value}</p>
+                  </div>
+                ))}
+              </div>
             </motion.div>
 
             {/* ── Statutory Orders Card ── */}
@@ -593,7 +541,9 @@ export default function BuildingProfile({
               <div className="flex flex-col gap-4">
                 {visibleReviews.length === 0 && (
                   <p className="text-sm text-center py-8" style={{ color: "#9CA3AF" }}>
-                    No reviews match this filter.
+                    {buildingReviews.length === 0
+                      ? "No reviews yet — be the first to review this building"
+                      : "No reviews match this filter."}
                   </p>
                 )}
                 {visibleReviews.slice(0, 1).map((review, i) => (

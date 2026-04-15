@@ -1,21 +1,34 @@
-﻿"use client";
+"use client";
 
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useInView } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 type BezierTuple = [number, number, number, number];
 const EASE: BezierTuple = [0.22, 1, 0.36, 1];
 
-const stats = [
-  { value: "51,000+", label: "Buildings" },
-  { value: "Verified", label: "Govt Data" },
-  { value: "Hong Kong", label: "Launch" },
-];
-
 export default function StatsSection() {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
+  const [buildingCount, setBuildingCount] = useState("6,611+");
+
+  useEffect(() => {
+    supabase
+      .from("buildings")
+      .select("*", { count: "exact", head: true })
+      .then(({ count }) => {
+        if (count && count > 0) {
+          setBuildingCount(count.toLocaleString() + "+");
+        }
+      });
+  }, []);
+
+  const stats = [
+    { value: buildingCount, label: "HK Island Buildings" },
+    { value: "Verified", label: "Govt Data" },
+    { value: "Hong Kong", label: "Launch" },
+  ];
 
   return (
     <section
