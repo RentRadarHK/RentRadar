@@ -203,14 +203,18 @@ export default function BuildingProfile({
                   <Calendar size={13} className="text-[#9CA3AF]" />
                   Built {permitYear}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <Layers size={13} className="text-[#9CA3AF]" />
-                  {building.floors} floors
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Building2 size={13} className="text-[#9CA3AF]" />
-                  {building.units} units
-                </span>
+                {building.floors > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <Layers size={13} className="text-[#9CA3AF]" />
+                    {building.floors} floors
+                  </span>
+                )}
+                {building.units > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <Building2 size={13} className="text-[#9CA3AF]" />
+                    {building.units} units
+                  </span>
+                )}
                 <span className="flex items-center gap-1.5">
                   <Hash size={13} className="text-[#9CA3AF]" />
                   {building.buildingType}
@@ -236,7 +240,7 @@ export default function BuildingProfile({
                   style={{ background: "#E4F0EB", color: "#1F5C42" }}
                 >
                   <MapPin size={11} />
-                  {building.market}
+                  {building.district}
                 </span>
                 <GovDataBadge lastUpdated={building.govDataLastUpdated} />
                 {hasOutstandingOrders && (
@@ -796,7 +800,9 @@ export default function BuildingProfile({
                   { label: "Reviews", value: `${building.totalReviews}` },
                   { label: "Rating", value: `${building.avgRating} / 5` },
                   { label: "Built", value: `${permitYear}` },
-                  { label: "Units", value: `${building.units}` },
+                  building.units > 0
+                    ? { label: "Units", value: `${building.units}` }
+                    : { label: "Type", value: building.buildingType || "—" },
                 ].map(({ label, value }) => (
                   <div key={label} className="rounded-xl p-4" style={{ background: "#F5F0E8" }}>
                     <p className="text-xl font-extrabold" style={{ color: "#555555" }}>
