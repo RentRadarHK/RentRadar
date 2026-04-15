@@ -434,6 +434,7 @@ export default function ReviewForm() {
   const [stillRenting, setStillRenting] = useState<boolean | null>(null);
   const [unitType, setUnitType] = useState<UnitType>("");
   const [floorNumber, setFloorNumber] = useState("");
+  const [landlordName, setLandlordName] = useState("");
 
   // Step 3 — ratings
   const [overallRating, setOverallRating] = useState(0);
@@ -563,6 +564,7 @@ export default function ReviewForm() {
       if (draft.stillRenting !== undefined) setStillRenting(draft.stillRenting);
       if (draft.unitType) setUnitType(draft.unitType);
       if (draft.floorNumber) setFloorNumber(draft.floorNumber);
+      if (draft.landlordName) setLandlordName(draft.landlordName);
       if (draft.overallRating) setOverallRating(draft.overallRating);
       if (draft.ratingMaintenance) setRatingMaintenance(draft.ratingMaintenance);
       if (draft.ratingCleanliness) setRatingCleanliness(draft.ratingCleanliness);
@@ -668,6 +670,7 @@ export default function ReviewForm() {
           rental_method:         rentMethod,
           unit_type:             unitType || undefined,
           floor_number:          floorNumber || undefined,
+          landlord_name:         landlordName || undefined,
           rating_overall:                   overallRating,
           rating_maintenance:               ratingMaintenance,
           rating_cleanliness:               ratingCleanliness,
@@ -721,6 +724,7 @@ export default function ReviewForm() {
       stillRenting,
       unitType,
       floorNumber,
+      landlordName,
       overallRating,
       ratingMaintenance,
       ratingCleanliness,
@@ -766,6 +770,7 @@ export default function ReviewForm() {
     setStillRenting(null);
     setUnitType("");
     setFloorNumber("");
+    setLandlordName("");
     setOverallRating(0);
     setRatingMaintenance(0);
     setRatingCleanliness(0);
@@ -1233,6 +1238,30 @@ export default function ReviewForm() {
                         value={floorNumber}
                         onChange={(e) => setFloorNumber(e.target.value)}
                         placeholder="e.g. 12/F or G/F"
+                        className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1px solid #E2D9CE",
+                          color: "#555555",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
+                    </div>
+
+                    {/* Landlord name (optional) */}
+                    <div className="mb-8">
+                      <p className="text-sm font-semibold mb-1" style={{ color: "#555555" }}>
+                        Who was your landlord?
+                      </p>
+                      <p className="text-xs mb-3" style={{ color: "#9CA3AF" }}>
+                        Optional — individual name, company name, or estate agency. Helps us build landlord profiles.
+                      </p>
+                      <input
+                        type="text"
+                        value={landlordName}
+                        onChange={(e) => setLandlordName(e.target.value)}
+                        placeholder="e.g. Pacific Realty Holdings, John Smith, Centaline Property Agency"
                         className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
                         style={{
                           background: "#F5F0E8",

@@ -66,6 +66,7 @@ interface ModerationEmailParams {
   propertyName: string;
   propertyType: "building" | "landlord";
   reviewText: string;
+  landlordName?: string;
   // Guided review answers
   buildingDayToDay?: string;
   buildingIssues?: string;
@@ -143,6 +144,7 @@ export async function sendModerationEmail(params: ModerationEmailParams) {
             ${row("Verified tenant", params.verifiedTenant ? "Yes" : "No")}
             ${row("Verification", params.verificationMethod)}
             ${params.reviewerEmail ? row("Reviewer email", params.reviewerEmail) : ""}
+            ${params.landlordName ? row("Landlord (self-reported)", params.landlordName) : ""}
           </tbody>
         </table>
 
