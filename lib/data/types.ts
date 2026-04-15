@@ -68,6 +68,7 @@ export interface Review {
   verifiedTenant: boolean;
   unitType?: string;
   floorNumber?: string;
+  unitNumber?: string;
   buildingDayToDay?: string;
   buildingIssues?: string;
   landlordExperience?: string;

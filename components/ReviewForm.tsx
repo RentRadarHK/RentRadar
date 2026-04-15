@@ -434,6 +434,7 @@ export default function ReviewForm() {
   const [stillRenting, setStillRenting] = useState<boolean | null>(null);
   const [unitType, setUnitType] = useState<UnitType>("");
   const [floorNumber, setFloorNumber] = useState("");
+  const [unitNumber, setUnitNumber] = useState("");
   const [landlordName, setLandlordName] = useState("");
 
   // Step 3 — ratings
@@ -564,6 +565,7 @@ export default function ReviewForm() {
       if (draft.stillRenting !== undefined) setStillRenting(draft.stillRenting);
       if (draft.unitType) setUnitType(draft.unitType);
       if (draft.floorNumber) setFloorNumber(draft.floorNumber);
+      if (draft.unitNumber) setUnitNumber(draft.unitNumber);
       if (draft.landlordName) setLandlordName(draft.landlordName);
       if (draft.overallRating) setOverallRating(draft.overallRating);
       if (draft.ratingMaintenance) setRatingMaintenance(draft.ratingMaintenance);
@@ -670,6 +672,7 @@ export default function ReviewForm() {
           rental_method:         rentMethod,
           unit_type:             unitType || undefined,
           floor_number:          floorNumber || undefined,
+          unit_number:           unitNumber || undefined,
           landlord_name:         landlordName || undefined,
           rating_overall:                   overallRating,
           rating_maintenance:               ratingMaintenance,
@@ -724,6 +727,7 @@ export default function ReviewForm() {
       stillRenting,
       unitType,
       floorNumber,
+      unitNumber,
       landlordName,
       overallRating,
       ratingMaintenance,
@@ -1228,25 +1232,49 @@ export default function ReviewForm() {
                       </div>
                     </div>
 
-                    {/* Q5: Floor number */}
-                    <div className="mb-8">
-                      <p className="text-sm font-semibold mb-3" style={{ color: "#555555" }}>
-                        Which floor were you on?
-                      </p>
-                      <input
-                        type="text"
-                        value={floorNumber}
-                        onChange={(e) => setFloorNumber(e.target.value)}
-                        placeholder="e.g. 12/F or G/F"
-                        className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
-                        style={{
-                          background: "#F5F0E8",
-                          border: "1px solid #E2D9CE",
-                          color: "#555555",
-                        }}
-                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
-                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
-                      />
+                    {/* Q5: Floor number + Unit number */}
+                    <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-semibold mb-3" style={{ color: "#555555" }}>
+                          Which floor were you on?
+                        </p>
+                        <input
+                          type="text"
+                          value={floorNumber}
+                          onChange={(e) => setFloorNumber(e.target.value)}
+                          placeholder="e.g. 12/F or G/F"
+                          className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                          style={{
+                            background: "#F5F0E8",
+                            border: "1px solid #E2D9CE",
+                            color: "#555555",
+                          }}
+                          onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                          onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold mb-1" style={{ color: "#555555" }}>
+                          Unit number
+                        </p>
+                        <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                          Optional — helps identify your specific unit
+                        </p>
+                        <input
+                          type="text"
+                          value={unitNumber}
+                          onChange={(e) => setUnitNumber(e.target.value)}
+                          placeholder="e.g. Flat A, Unit 3, 12B"
+                          className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none"
+                          style={{
+                            background: "#F5F0E8",
+                            border: "1px solid #E2D9CE",
+                            color: "#555555",
+                          }}
+                          onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                          onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                        />
+                      </div>
                     </div>
 
                     {/* Landlord name (optional) */}

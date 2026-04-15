@@ -75,6 +75,7 @@ interface ReviewRow {
   // Unit info
   unit_type: string | null;
   floor_number: string | null;
+  unit_number: string | null;
   // Guided review fields
   building_day_to_day: string | null;
   building_issues: string | null;
@@ -166,6 +167,7 @@ function mapReview(row: ReviewRow): Review {
     verifiedTenant: row.verified_tenant,
     unitType: row.unit_type ?? undefined,
     floorNumber: row.floor_number ?? undefined,
+    unitNumber: row.unit_number ?? undefined,
     buildingDayToDay: row.building_day_to_day ?? undefined,
     buildingIssues: row.building_issues ?? undefined,
     landlordExperience: row.landlord_experience ?? undefined,

@@ -26,6 +26,7 @@ interface SubmitBody {
   rating_would_rent_again?: number;
   unit_type?: string;
   floor_number?: string;
+  unit_number?: string;
   landlord_name?: string;
   review_text?: string;
   building_day_to_day?: string;
@@ -151,6 +152,7 @@ export async function POST(req: NextRequest) {
     rental_method:         body.rental_method ?? null,
     unit_type:             body.unit_type ?? null,
     floor_number:          body.floor_number ?? null,
+    unit_number:           body.unit_number ?? null,
     landlord_name:         body.landlord_name ?? null,
     rating_overall:                 body.rating_overall,
     rating_maintenance:             body.rating_maintenance ?? null,
