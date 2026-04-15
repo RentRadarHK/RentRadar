@@ -17,7 +17,7 @@ import {
   PenLine,
 } from "lucide-react";
 import Link from "next/link";
-import { Building, Landlord, Review } from "@/lib/data/types";
+import { Building, Landlord, Review, ReviewResponse } from "@/lib/data/types";
 import GovDataBadge from "./GovDataBadge";
 import PriceGuide, { PriceGuideRegion } from "./PriceGuide";
 
@@ -38,6 +38,7 @@ interface LocalReview {
   landlordExperience?: string;
   landlordDeposit?: string;
   landlordRentAgain?: string;
+  response?: ReviewResponse;
 }
 
 function relativeTime(dateStr: string): string {
@@ -79,6 +80,7 @@ function toLocalReview(r: Review, index: number): LocalReview {
     landlordExperience:     r.landlordExperience,
     landlordDeposit:        r.landlordDeposit,
     landlordRentAgain:      r.landlordRentAgain,
+    response:               r.response,
   };
 }
 
@@ -660,6 +662,37 @@ export default function LandlordProfile({
                         </button>
                       </div>
                     </div>
+
+                    {/* Landlord response */}
+                    {review.response?.status === "approved" && (
+                      <div
+                        className="mt-4 pl-4 py-3 pr-3 rounded-r-[10px]"
+                        style={{ borderLeft: "3px solid #4D8B6F", background: "#F5F0E8" }}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className="text-xs font-semibold" style={{ color: "#4D8B6F" }}>
+                            Response from landlord
+                          </span>
+                          {landlordDisplay.verified && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                              style={{ background: "#E4F0EB", color: "#1F5C42" }}
+                            >
+                              <Shield size={9} />
+                              Verified
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm leading-relaxed" style={{ color: "#555555" }}>
+                          {review.response.responseText}
+                        </p>
+                        <p className="text-xs mt-1.5" style={{ color: "#9CA3AF" }}>
+                          {new Date(review.response.createdAt).toLocaleDateString("en-HK", {
+                            day: "numeric", month: "short", year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
 
@@ -801,44 +834,59 @@ export default function LandlordProfile({
             </motion.div>
 
             {/* ── 9. Claim Profile ── */}
-            <motion.div
-              {...cardFadeProps(0.15)}
-              className="bg-white rounded-[16px] p-6"
-              style={{
-                border: "2.5px dashed #555555",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
-              }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <Shield size={18} style={{ color: "#4D8B6F" }} />
-                <h3 className="font-bold text-[#555555]">Are you this landlord?</h3>
-              </div>
-              <p className="text-sm text-[#6B7280] mb-5 leading-relaxed">
-                Claim your profile to respond to reviews, add property details, and earn your{" "}
-                <strong className="text-[#555555]">Verified Landlord</strong> badge.
-              </p>
-              <button
-                className="w-full font-semibold text-sm py-3 rounded-[12px] mb-2.5 transition-all duration-200"
+            {landlordData.claimStatus === "approved" ? null : (
+              <motion.div
+                {...cardFadeProps(0.15)}
+                className="bg-white rounded-[16px] p-6"
                 style={{
-                  border: "2px solid #555555",
-                  color: "#555555",
-                  background: "transparent",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "#555555";
-                  (e.currentTarget as HTMLButtonElement).style.color = "#fff";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                  (e.currentTarget as HTMLButtonElement).style.color = "#555555";
+                  border: landlordData.claimStatus === "pending"
+                    ? "2.5px solid #FDE68A"
+                    : "2.5px dashed #555555",
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
                 }}
               >
-                Claim This Profile
-              </button>
-              <p className="text-[11px] text-center" style={{ color: "#9CA3AF" }}>
-                Free to claim. Verification required.
-              </p>
-            </motion.div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Shield size={18} style={{ color: "#4D8B6F" }} />
+                  <h3 className="font-bold text-[#555555]">Are you this landlord?</h3>
+                </div>
+
+                {landlordData.claimStatus === "pending" ? (
+                  <>
+                    <p className="text-sm mb-0 leading-relaxed" style={{ color: "#92400E" }}>
+                      A claim has been submitted for this profile and is currently under review.
+                    </p>
+                    <p className="text-[11px] mt-2" style={{ color: "#9CA3AF" }}>
+                      Verification takes 1–2 business days.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-[#6B7280] mb-5 leading-relaxed">
+                      Claim your profile to respond to reviews, add property details, and earn your{" "}
+                      <strong className="text-[#555555]">Verified Landlord</strong> badge.
+                    </p>
+                    <Link
+                      href={`/landlord/claim?id=${landlordData.id}`}
+                      className="w-full font-semibold text-sm py-3 rounded-[12px] mb-2.5 transition-all duration-200 block text-center"
+                      style={{ border: "2px solid #555555", color: "#555555", background: "transparent" }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.background = "#555555";
+                        (e.currentTarget as HTMLAnchorElement).style.color = "#fff";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                        (e.currentTarget as HTMLAnchorElement).style.color = "#555555";
+                      }}
+                    >
+                      Claim This Profile
+                    </Link>
+                    <p className="text-[11px] text-center" style={{ color: "#9CA3AF" }}>
+                      Free to claim. Verification required.
+                    </p>
+                  </>
+                )}
+              </motion.div>
+            )}
 
             {/* ── Properties (linked buildings) ── */}
             {linkedBuildings.length > 0 && (

@@ -53,6 +53,23 @@ export interface Landlord {
     renewalFairness: number;
   };
   redFlags: RedFlag[];
+  // Claim fields
+  claimStatus?: string;
+  claimUserId?: string;
+  bio?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  website?: string;
+}
+
+export interface ReviewResponse {
+  id: string;
+  reviewId: string;
+  landlordId: string;
+  responseText: string;
+  status: string;
+  createdAt: string;
+  moderationToken?: string;
 }
 
 export interface Review {
@@ -74,6 +91,7 @@ export interface Review {
   landlordExperience?: string;
   landlordDeposit?: string;
   landlordRentAgain?: string;
+  response?: ReviewResponse;
   district: string;
   market: string;
   datePosted: string;

@@ -254,3 +254,236 @@ export async function sendModerationEmail(params: ModerationEmailParams) {
 
   console.log("Moderation email sent for review:", params.reviewId);
 }
+
+// ── Landlord claim moderation email ──────────────────────────────────────────
+
+interface ClaimModerationParams {
+  claimId: string;
+  moderationToken: string;
+  landlordId: string;
+  landlordName: string;
+  claimantName: string;
+  claimantEmail: string;
+  companyName?: string;
+  documentType?: string;
+}
+
+export async function sendClaimModerationEmail(params: ClaimModerationParams) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rentradar.co";
+
+  const approveUrl = `${siteUrl}/api/landlord/claim/moderate?action=approve&id=${params.claimId}&token=${params.moderationToken}`;
+  const rejectUrl  = `${siteUrl}/api/landlord/claim/moderate?action=reject&id=${params.claimId}&token=${params.moderationToken}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New landlord claim to review</title>
+    </head>
+    <body style="background:#F5F0E8;font-family:Arial,sans-serif;margin:0;padding:40px 20px;">
+      <div style="max-width:560px;margin:0 auto;background:white;border-radius:16px;padding:40px;border:1px solid #E2D9CE;">
+        <p style="color:#9CA3AF;font-size:12px;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.05em;">RentRadar · Landlord Claim</p>
+        <h1 style="color:#111827;font-size:22px;font-weight:800;margin:0 0 24px;">${params.landlordName}</h1>
+
+        <table style="width:100%;border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:28px;">
+          <tbody>
+            ${row("Landlord profile", params.landlordName)}
+            ${row("Landlord ID", params.landlordId)}
+            ${row("Claimant name", params.claimantName)}
+            ${row("Claimant email", params.claimantEmail)}
+            ${params.companyName ? row("Company", params.companyName) : ""}
+            ${params.documentType ? row("Document type", params.documentType) : ""}
+          </tbody>
+        </table>
+
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="width:48%;padding-right:8px;">
+              <a href="${approveUrl}"
+                 style="display:block;text-align:center;background:#4D8B6F;color:white;font-size:15px;font-weight:700;padding:16px;border-radius:10px;text-decoration:none;">
+                ✓ APPROVE CLAIM
+              </a>
+            </td>
+            <td style="width:48%;padding-left:8px;">
+              <a href="${rejectUrl}"
+                 style="display:block;text-align:center;background:#E8573A;color:white;font-size:15px;font-weight:700;padding:16px;border-radius:10px;text-decoration:none;">
+                ✕ REJECT CLAIM
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <hr style="border:none;border-top:1px solid #E2D9CE;margin:28px 0 16px;">
+        <p style="color:#9CA3AF;font-size:11px;margin:0;">
+          RentRadar &middot; rentradar.co &middot; Claim ID: ${params.claimId}
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const { error } = await resend.emails.send({
+    from: "RentRadar <noreply@rentradar.co>",
+    to: "joe@rentradar.co",
+    subject: `New landlord claim — ${params.landlordName}`,
+    html,
+  });
+
+  if (error) console.error("Claim moderation email error:", JSON.stringify(error));
+}
+
+// ── Landlord claim decision emails ───────────────────────────────────────────
+
+export async function sendClaimApprovalEmail(to: string, landlordName: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"></head>
+    <body style="background:#F5F0E8;font-family:Arial,sans-serif;margin:0;padding:40px 20px;">
+      <div style="max-width:480px;margin:0 auto;background:white;border-radius:16px;padding:40px;border:1px solid #E2D9CE;">
+        <h1 style="color:#555555;font-size:22px;margin:0 0 8px;">RentRadar</h1>
+        <hr style="border:none;border-top:1px solid #E2D9CE;margin:20px 0;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#E4F0EB;display:flex;align-items:center;justify-content:center;margin:0 0 20px;">
+          <span style="font-size:24px;">✓</span>
+        </div>
+        <h2 style="color:#555555;font-size:20px;margin:0 0 12px;">Your claim has been approved!</h2>
+        <p style="color:#6B7280;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          Congratulations — your claim for <strong>${landlordName}</strong> has been verified.
+          You can now log in to your dashboard to respond to reviews and manage your profile.
+        </p>
+        <a href="${process.env.NEXT_PUBLIC_SITE_URL ?? "https://rentradar.co"}/dashboard"
+           style="display:inline-block;background:#4D8B6F;color:white;font-size:15px;font-weight:600;padding:14px 32px;border-radius:999px;text-decoration:none;">
+          Go to Dashboard
+        </a>
+        <hr style="border:none;border-top:1px solid #E2D9CE;margin:28px 0 16px;">
+        <p style="color:#9CA3AF;font-size:12px;margin:0;">RentRadar &middot; rentradar.co</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const { error } = await resend.emails.send({
+    from: "RentRadar <noreply@rentradar.co>",
+    to,
+    subject: `Your landlord claim for ${landlordName} has been approved`,
+    html,
+  });
+
+  if (error) console.error("Claim approval email error:", JSON.stringify(error));
+}
+
+export async function sendClaimRejectionEmail(to: string, landlordName: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"></head>
+    <body style="background:#F5F0E8;font-family:Arial,sans-serif;margin:0;padding:40px 20px;">
+      <div style="max-width:480px;margin:0 auto;background:white;border-radius:16px;padding:40px;border:1px solid #E2D9CE;">
+        <h1 style="color:#555555;font-size:22px;margin:0 0 8px;">RentRadar</h1>
+        <hr style="border:none;border-top:1px solid #E2D9CE;margin:20px 0;">
+        <h2 style="color:#555555;font-size:20px;margin:0 0 12px;">Claim not approved</h2>
+        <p style="color:#6B7280;font-size:15px;line-height:1.6;margin:0 0 16px;">
+          We were unable to verify your claim for <strong>${landlordName}</strong> with the documents provided.
+        </p>
+        <p style="color:#6B7280;font-size:15px;line-height:1.6;margin:0 0 24px;">
+          If you believe this is an error, please contact us at
+          <a href="mailto:joe@rentradar.co" style="color:#4D8B6F;">joe@rentradar.co</a> with additional documentation.
+        </p>
+        <hr style="border:none;border-top:1px solid #E2D9CE;margin:24px 0 16px;">
+        <p style="color:#9CA3AF;font-size:12px;margin:0;">RentRadar &middot; rentradar.co</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const { error } = await resend.emails.send({
+    from: "RentRadar <noreply@rentradar.co>",
+    to,
+    subject: `Update on your landlord claim for ${landlordName}`,
+    html,
+  });
+
+  if (error) console.error("Claim rejection email error:", JSON.stringify(error));
+}
+
+// ── Review response moderation email ─────────────────────────────────────────
+
+interface ResponseModerationParams {
+  responseId: string;
+  moderationToken: string;
+  landlordName: string;
+  reviewId: string;
+  reviewExcerpt: string;
+  responseText: string;
+}
+
+export async function sendResponseModerationEmail(params: ResponseModerationParams) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rentradar.co";
+
+  const approveUrl = `${siteUrl}/api/reviews/response/moderate?action=approve&id=${params.responseId}&token=${params.moderationToken}`;
+  const rejectUrl  = `${siteUrl}/api/reviews/response/moderate?action=reject&id=${params.responseId}&token=${params.moderationToken}`;
+
+  const esc = (s: string) => s.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"></head>
+    <body style="background:#F5F0E8;font-family:Arial,sans-serif;margin:0;padding:40px 20px;">
+      <div style="max-width:560px;margin:0 auto;background:white;border-radius:16px;padding:40px;border:1px solid #E2D9CE;">
+        <p style="color:#9CA3AF;font-size:12px;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.05em;">RentRadar · Landlord Response</p>
+        <h1 style="color:#111827;font-size:22px;font-weight:800;margin:0 0 24px;">${params.landlordName}</h1>
+
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Original review excerpt</p>
+        <div style="background:#F9FAFB;border-left:3px solid #E2D9CE;border-radius:4px;padding:16px 20px;margin-bottom:20px;">
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${esc(params.reviewExcerpt)}</p>
+        </div>
+
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Landlord response</p>
+        <div style="background:#F9FAFB;border-left:3px solid #4D8B6F;border-radius:4px;padding:16px 20px;margin-bottom:28px;">
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${esc(params.responseText)}</p>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="width:48%;padding-right:8px;">
+              <a href="${approveUrl}"
+                 style="display:block;text-align:center;background:#4D8B6F;color:white;font-size:15px;font-weight:700;padding:16px;border-radius:10px;text-decoration:none;">
+                ✓ APPROVE
+              </a>
+            </td>
+            <td style="width:48%;padding-left:8px;">
+              <a href="${rejectUrl}"
+                 style="display:block;text-align:center;background:#E8573A;color:white;font-size:15px;font-weight:700;padding:16px;border-radius:10px;text-decoration:none;">
+                ✕ REJECT
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <hr style="border:none;border-top:1px solid #E2D9CE;margin:28px 0 16px;">
+        <p style="color:#9CA3AF;font-size:11px;margin:0;">
+          RentRadar &middot; rentradar.co &middot; Response ID: ${params.responseId}
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const { error } = await resend.emails.send({
+    from: "RentRadar <noreply@rentradar.co>",
+    to: "joe@rentradar.co",
+    subject: `New landlord response to moderate — ${params.landlordName}`,
+    html,
+  });
+
+  if (error) console.error("Response moderation email error:", JSON.stringify(error));
+}

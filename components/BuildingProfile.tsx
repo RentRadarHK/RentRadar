@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Building, Landlord, Review } from "@/lib/data/types";
+// ReviewResponse is on the Review type via review.response
 import GovDataBadge from "./GovDataBadge";
 import PriceGuide, { PriceGuideRegion } from "./PriceGuide";
 
@@ -667,6 +668,33 @@ export default function BuildingProfile({
                         </button>
                       </div>
                     </div>
+
+                    {/* Landlord response */}
+                    {review.response?.status === "approved" && (
+                      <div
+                        className="mt-4 pl-4 py-3 pr-3 rounded-r-[10px]"
+                        style={{ borderLeft: "3px solid #4D8B6F", background: "#F5F0E8" }}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <span className="text-xs font-semibold" style={{ color: "#4D8B6F" }}>
+                            Response from landlord
+                          </span>
+                          <span
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{ background: "#E4F0EB", color: "#1F5C42" }}
+                          >
+                            <Shield size={9} />
+                            Verified
+                          </span>
+                        </div>
+                        <p className="text-sm leading-relaxed" style={{ color: "#555555" }}>
+                          {review.response.responseText}
+                        </p>
+                        <p className="text-xs mt-1.5" style={{ color: "#9CA3AF" }}>
+                          {formatDate(review.response.createdAt)}
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
 

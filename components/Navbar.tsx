@@ -1,19 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Radio, Menu, X, PenLine } from "lucide-react";
+import { Radio, Menu, X, PenLine, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useAuth } from "@/lib/context/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isLandlord, setIsLandlord] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!user) { setIsLandlord(false); return; }
+    const supabase = createClient();
+    supabase
+      .from("landlords")
+      .select("id")
+      .eq("claim_user_id", user.id)
+      .eq("claim_status", "approved")
+      .single()
+      .then(({ data }) => setIsLandlord(!!data));
+  }, [user]);
 
   const links = [
     { label: "How it works", href: "/how-it-works" },
@@ -51,6 +67,16 @@ export default function Navbar() {
                 {l.label}
               </Link>
             ))}
+
+            {isLandlord && (
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+              >
+                <LayoutDashboard size={14} />
+                Dashboard
+              </Link>
+            )}
 
             <Link
               href="/review"
@@ -95,6 +121,16 @@ export default function Navbar() {
                   {l.label}
                 </Link>
               ))}
+              {isLandlord && (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  className="text-sm font-medium text-white/80 hover:text-white flex items-center gap-1.5"
+                >
+                  <LayoutDashboard size={14} />
+                  Dashboard
+                </Link>
+              )}
               <Link
                 href="/review"
                 onClick={() => setMenuOpen(false)}

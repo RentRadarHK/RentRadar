@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { Building, Landlord, Review, SearchResult, StatutoryOrder } from "@/lib/data/types";
+import { Building, Landlord, Review, ReviewResponse, SearchResult, StatutoryOrder } from "@/lib/data/types";
 
 // ── Raw DB row shapes ─────────────────────────────────────────────────────────
 
@@ -49,6 +49,22 @@ interface LandlordRow {
   rating_listing_accuracy: number;
   rating_maintenance: number;
   rating_renewal_fairness: number;
+  claim_status: string | null;
+  claim_user_id: string | null;
+  bio: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  website: string | null;
+}
+
+interface ReviewResponseRow {
+  id: string;
+  created_at: string;
+  review_id: string;
+  landlord_id: string;
+  response_text: string;
+  status: string;
+  moderation_token: string;
 }
 
 interface ReviewRow {
@@ -140,7 +156,43 @@ function mapLandlord(row: LandlordRow, propertyIds: string[] = []): Landlord {
       renewalFairness: Number(row.rating_renewal_fairness),
     },
     redFlags: [], // derived from reviews in the component
+    claimStatus: row.claim_status ?? "unclaimed",
+    claimUserId: row.claim_user_id ?? undefined,
+    bio: row.bio ?? undefined,
+    contactEmail: row.contact_email ?? undefined,
+    contactPhone: row.contact_phone ?? undefined,
+    website: row.website ?? undefined,
   };
+}
+
+function mapReviewResponse(row: ReviewResponseRow): ReviewResponse {
+  return {
+    id: row.id,
+    reviewId: row.review_id,
+    landlordId: row.landlord_id,
+    responseText: row.response_text,
+    status: row.status,
+    createdAt: row.created_at,
+    moderationToken: row.moderation_token,
+  };
+}
+
+async function attachResponses(reviews: Review[]): Promise<Review[]> {
+  if (reviews.length === 0) return reviews;
+  const ids = reviews.map((r) => r.id);
+  const { data } = await supabase
+    .from("review_responses")
+    .select("*")
+    .in("review_id", ids)
+    .eq("status", "approved");
+  if (!data || data.length === 0) return reviews;
+  const byReview = new Map(
+    (data as ReviewResponseRow[]).map((r) => [r.review_id, mapReviewResponse(r)])
+  );
+  return reviews.map((review) => ({
+    ...review,
+    response: byReview.get(review.id),
+  }));
 }
 
 function headlineFromText(text: string): string {
@@ -275,7 +327,7 @@ export async function getReviewsForBuilding(buildingId: string): Promise<Review[
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
-  return (data as ReviewRow[]).map(mapReview);
+  return attachResponses((data as ReviewRow[]).map(mapReview));
 }
 
 export async function getReviewsForLandlord(landlordId: string): Promise<Review[]> {
@@ -287,7 +339,31 @@ export async function getReviewsForLandlord(landlordId: string): Promise<Review[
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
-  return (data as ReviewRow[]).map(mapReview);
+  return attachResponses((data as ReviewRow[]).map(mapReview));
+}
+
+export async function getLandlordByUserId(userId: string): Promise<Landlord | null> {
+  const { data, error } = await supabase
+    .from("landlords")
+    .select("*")
+    .eq("claim_user_id", userId)
+    .eq("claim_status", "approved")
+    .single();
+
+  if (error || !data) return null;
+  return mapLandlord(data as LandlordRow);
+}
+
+export async function checkUserIsLandlord(
+  userId: string
+): Promise<{ id: string; name: string } | null> {
+  const { data } = await supabase
+    .from("landlords")
+    .select("id, name")
+    .eq("claim_user_id", userId)
+    .eq("claim_status", "approved")
+    .single();
+  return data ?? null;
 }
 
 export async function getLandlordsForBuilding(buildingId: string): Promise<Landlord[]> {
