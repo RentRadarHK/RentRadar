@@ -108,7 +108,7 @@ function CtaSearch() {
           Ready to research your next rental?
         </h2>
         <p className="text-white/70 mb-7 leading-relaxed">
-          Search 51,000+ buildings and verified tenant reviews — free.
+          Search 6,611+ HK Island buildings and verified tenant reviews — free.
         </p>
         {/* Search bar */}
         <div
@@ -162,7 +162,7 @@ export default function HowItWorksPage() {
     {
       icon: Search,
       title: "Search",
-      desc: "Search any address, building name, or landlord in Hong Kong. Access our database of 51,000+ verified buildings instantly.",
+      desc: "Search any address, building name, or landlord in Hong Kong. Access our database of 6,611+ HK Island buildings instantly.",
     },
     {
       icon: Shield,

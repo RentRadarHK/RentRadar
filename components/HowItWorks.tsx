@@ -13,7 +13,7 @@ const steps = [
     icon: Search,
     number: "01",
     title: "Search",
-    description: "Search any address, building or landlord in Hong Kong. Instant results from 51,000+ verified buildings.",
+    description: "Search any address, building or landlord in Hong Kong. Instant results from 6,611+ HK Island buildings.",
   },
   {
     icon: BookOpen,

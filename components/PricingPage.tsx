@@ -8,7 +8,7 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const FEATURES = [
-  "Unlimited access to all tenant reviews across 51,000+ buildings",
+  "Unlimited access to all tenant reviews across 6,611+ HK Island buildings",
   "Full landlord profiles with verified review history",
   "Government building records from Buildings Department, HKSAR",
   "Statutory orders and compliance history for any building",

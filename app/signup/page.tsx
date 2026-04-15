@@ -117,7 +117,7 @@ export default function SignUpPage() {
 
           <ul className="flex flex-col gap-4 mb-10">
             {[
-              "Search 51,000+ verified buildings",
+              "Search 6,611+ HK Island buildings",
               "Read real tenant reviews",
               "Spot red flags before you commit",
             ].map((item) => (

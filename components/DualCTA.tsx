@@ -58,7 +58,7 @@ export default function DualCTA() {
                 Looking for your next rental?
               </h3>
               <p className="text-[#6B7280] text-base leading-relaxed max-w-xs">
-                Search 51,000+ buildings. Read verified reviews. Know before you sign.
+                Search 6,611+ HK Island buildings. Read verified reviews. Know before you sign.
               </p>
             </div>
             <a
