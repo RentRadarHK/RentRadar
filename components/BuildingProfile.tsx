@@ -285,6 +285,19 @@ export default function BuildingProfile({
 
             {activeTab === "overview" && (<>
 
+            {/* ── AI Description ── */}
+            {building.description && (
+              <motion.div {...cardFade(0.02)}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#9CA3AF" }}>
+                  About this building
+                </p>
+                <p style={{ fontSize: "15px", color: "#6B7280", lineHeight: 1.7 }}>
+                  {building.description}
+                </p>
+                <hr className="mt-6" style={{ borderColor: "#F3F4F6" }} />
+              </motion.div>
+            )}
+
             {/* ── Government Data Card ── */}
             <motion.div
               {...cardFade(0.05)}

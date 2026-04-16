@@ -25,6 +25,7 @@ export interface Building {
   landlords: string[];
   avgRating: number;
   totalReviews: number;
+  description: string | null;
 }
 
 export interface RedFlag {

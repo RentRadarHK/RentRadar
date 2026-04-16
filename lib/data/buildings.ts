@@ -37,6 +37,7 @@ export const buildings: Building[] = [
     landlords: ["pacific-realty-holdings"],
     avgRating: 3.2,
     totalReviews: 47,
+    description: null,
   },
   {
     id: "metro-residences",
@@ -56,6 +57,7 @@ export const buildings: Building[] = [
     landlords: ["sunrise-property-group"],
     avgRating: 4.1,
     totalReviews: 31,
+    description: null,
   },
   {
     id: "sheung-wan-plaza",
@@ -84,6 +86,7 @@ export const buildings: Building[] = [
     landlords: ["pacific-realty-holdings"],
     avgRating: 2.8,
     totalReviews: 23,
+    description: null,
   },
   {
     id: "tst-court",
@@ -103,6 +106,7 @@ export const buildings: Building[] = [
     landlords: ["sunrise-property-group"],
     avgRating: 4.4,
     totalReviews: 58,
+    description: null,
   },
 ];
 
