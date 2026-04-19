@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/context/AuthContext";
 
-const jakarta = Plus_Jakarta_Sans({
+const outfit = Outfit({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-jakarta",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-outfit",
   display: "swap",
 });
 
@@ -22,7 +22,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={jakarta.variable}>
+    <html lang="en" className={outfit.variable}>
+      <head>
+        <link rel="icon" type="image/svg+xml" sizes="32x32" href="/brand/favicon-32.svg"/>
+        <link rel="icon" type="image/svg+xml" sizes="16x16" href="/brand/favicon-16.svg"/>
+        <link rel="apple-touch-icon" href="/brand/apple-touch-icon.svg"/>
+      </head>
       <body className="font-sans antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>

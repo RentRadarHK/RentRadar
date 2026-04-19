@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="56" viewBox="0 0 240 56" fill="none">
+  <path d="M14 16 A 14 14 0 0 1 42 16" stroke="#555555" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.55"></path>
+  <path d="M8 14 A 20 20 0 0 1 48 14" stroke="#4D8B6F" stroke-width="2.2" stroke-linecap="round" fill="none"></path>
+  <path d="M28 54 C 28 54, 16 38, 16 26 A 12 12 0 0 1 40 26 C 40 38, 28 54, 28 54 Z" stroke="#555555" stroke-width="2.6" fill="none" stroke-linejoin="round"></path>
+  <circle cx="28" cy="26" r="3.6" fill="#4D8B6F"></circle>
+  <text x="66" y="40" font-family="Outfit, system-ui, sans-serif" font-weight="700" font-size="36" fill="#555555" letter-spacing="-0.9">Rent<tspan font-weight="500">Radar</tspan></text>
+</svg>

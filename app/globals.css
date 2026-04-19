@@ -1,6 +1,34 @@
-﻿@tailwind base;
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --rr-charcoal: #555555;
+  --rr-ink: #2E2E2E;
+  --rr-sage: #4D8B6F;
+  --rr-sage-deep: #3D6F58;
+  --rr-cream: #F5F0E8;
+  --rr-cream-deep: #E8E2D4;
+  --rr-paper: #FBF8F2;
+  --rr-coral: #E8573A;
+  --rr-line: #D9D2C2;
+  --rr-muted: #8A8170;
+  --rr-bg: var(--rr-cream);
+  --rr-surface: var(--rr-paper);
+  --rr-text: var(--rr-ink);
+  --rr-text-muted: var(--rr-muted);
+  --rr-border: var(--rr-line);
+  --rr-accent: var(--rr-sage);
+  --rr-accent-hover: var(--rr-sage-deep);
+  --rr-alert: var(--rr-coral);
+  --rr-radius-sm: 6px;
+  --rr-radius-md: 10px;
+  --rr-radius-lg: 14px;
+  --rr-radius-pill: 999px;
+  --rr-shadow: 0 8px 24px rgba(46, 46, 46, 0.06);
+}
 
 * {
   box-sizing: border-box;
@@ -11,6 +39,7 @@ html {
 }
 
 body {
+  font-family: 'Outfit', system-ui, sans-serif;
   background-color: #F5F0E8;
   color: #555555;
   -webkit-font-smoothing: antialiased;
@@ -45,4 +74,19 @@ body {
 }
 .snap-start {
   scroll-snap-align: start;
+}
+
+@keyframes rr-pulse-arc {
+  0%   { transform: scale(0.35); opacity: 0; }
+  15%  { opacity: 0.9; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.rr-pulse-arc {
+  transform-origin: 28px 26px;
+  animation: rr-pulse-arc 2.4s ease-out infinite;
+}
+.rr-pulse-arc.a2 { animation-delay: 0.8s; }
+.rr-pulse-arc.a3 { animation-delay: 1.6s; }
+@media (prefers-reduced-motion: reduce) {
+  .rr-pulse-arc { animation: none; opacity: 0.5; }
 }

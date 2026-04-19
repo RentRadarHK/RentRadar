@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Radio, Menu, X, PenLine, LayoutDashboard } from "lucide-react";
+import { Menu, X, PenLine, LayoutDashboard } from "lucide-react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
@@ -46,14 +47,15 @@ export default function Navbar() {
       >
         <nav className="max-w-[1200px] mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative w-7 h-7 flex items-center justify-center">
-              <Radio size={20} className="text-white relative z-10" />
-              <span className="absolute inset-0 rounded-full bg-white/10 group-hover:bg-white/20 transition-colors duration-200" />
-            </div>
-            <span className="text-white font-bold text-[17px] tracking-tight">
-              Rent<span className="text-[#4D8B6F]">Radar</span>
-            </span>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/brand/logo-reversed.svg"
+              alt="RentRadar"
+              width={160}
+              height={36}
+              style={{ height: '36px', width: 'auto' }}
+              priority
+            />
           </Link>
 
           {/* Desktop Nav */}
