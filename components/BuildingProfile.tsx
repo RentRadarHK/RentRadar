@@ -71,6 +71,13 @@ const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
   Complied: { bg: "#E4F0EB", text: "#4D8B6F" },
 };
 
+function shortenBuildingType(t: string): string {
+  if (t === "Residential/Composite") return "Residential";
+  if (t === "Non-domestic") return "Commercial";
+  if (t === "Composite") return "Mixed Use";
+  return t;
+}
+
 function toRegion(r: "Kowloon" | "HK Island" | "New Territories"): PriceGuideRegion {
   if (r === "Kowloon") return "kowloon";
   if (r === "HK Island") return "hk_island";
@@ -792,10 +799,10 @@ export default function BuildingProfile({
                   { label: "Built", value: `${permitYear}` },
                   building.units > 0
                     ? { label: "Units", value: `${building.units}` }
-                    : { label: "Type", value: building.buildingType || "—" },
+                    : { label: "Type", value: shortenBuildingType(building.buildingType || "—") },
                 ].map(({ label, value }) => (
                   <div key={label} className="rounded-xl p-4" style={{ background: "#F5F0E8" }}>
-                    <p className="text-xl font-extrabold" style={{ color: "#555555" }}>
+                    <p className="font-extrabold" style={{ color: "#555555", fontSize: "clamp(12px, 1.8vw, 20px)", wordBreak: "break-word", lineHeight: 1.2 }}>
                       {value}
                     </p>
                     <p className="text-xs mt-0.5" style={{ color: "#6B7280" }}>
