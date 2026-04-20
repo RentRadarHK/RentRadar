@@ -7,6 +7,7 @@ import {
   Building2,
   Star,
   ChevronRight,
+  ChevronDown,
   AlertTriangle,
   CheckCircle2,
   MapPin,
@@ -115,6 +116,7 @@ export default function BuildingProfile({
   const [activeFilter, setActiveFilter] = useState<ReviewFilter>("All");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"overview" | "price-guide">("overview");
+  const [showOfficialRecords, setShowOfficialRecords] = useState(false);
 
   const buildingReviews = propReviews ?? [];
   const visibleReviews = filterReviews(buildingReviews, activeFilter);
@@ -288,53 +290,28 @@ export default function BuildingProfile({
             {/* ── AI Description ── */}
             {building.description && (
               <motion.div {...cardFade(0.02)}>
-                <p className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: "#9CA3AF" }}>
-                  About this building
-                </p>
-                <p style={{ fontSize: "15px", color: "#6B7280", lineHeight: 1.7 }}>
-                  {building.description}
-                </p>
-                <hr className="mt-6" style={{ borderColor: "#F3F4F6" }} />
+                <div style={{ marginBottom: "2rem" }}>
+                  <p style={{
+                    fontSize: "11px",
+                    fontWeight: 500,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "#9CA3AF",
+                    marginBottom: "12px",
+                  }}>
+                    About this building
+                  </p>
+                  <div style={{
+                    fontSize: "15px",
+                    color: "#6B7280",
+                    lineHeight: "1.7",
+                    whiteSpace: "pre-line",
+                  }}>
+                    {building.description}
+                  </div>
+                </div>
               </motion.div>
             )}
-
-            {/* ── Government Data Card ── */}
-            <motion.div
-              {...cardFade(0.05)}
-              className="rounded-[16px] p-8"
-              style={{
-                background: "#E4F0EB",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-                borderLeft: "4px solid #555555",
-              }}
-            >
-              <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-                <h2 className="text-lg font-bold text-[#555555]">Official Building Record</h2>
-                <span className="text-xs font-medium" style={{ color: "#4D8B6F" }}>
-                  ✓ Data sourced from Buildings Department, HKSAR
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Occupation Permit", value: building.occupationPermitNumber },
-                  { label: "Permit Issued", value: formatDate(building.occupationPermitDate) },
-                  { label: "Building Type", value: building.buildingType },
-                  { label: "Block ID", value: building.blockId },
-                ].map(({ label, value }) => (
-                  <div
-                    key={label}
-                    className="rounded-xl p-4"
-                    style={{ background: "#fff" }}
-                  >
-                    <p className="text-[11px] font-semibold uppercase tracking-wider mb-1" style={{ color: "#9CA3AF" }}>
-                      {label}
-                    </p>
-                    <p className="text-sm font-bold text-[#555555]">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
 
             {/* ── Statutory Orders Card ── */}
             <motion.div
@@ -847,6 +824,50 @@ export default function BuildingProfile({
               >
                 View All Landlords
               </Link>
+            </motion.div>
+
+            {/* Official Records — collapsible */}
+            <motion.div
+              {...cardFade(0.13)}
+              className="bg-white rounded-[16px] p-6"
+              style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
+            >
+              <button
+                onClick={() => setShowOfficialRecords((v) => !v)}
+                className="w-full flex items-center justify-between"
+              >
+                <span className="text-sm font-semibold" style={{ color: "#555555" }}>
+                  Official Records
+                </span>
+                <ChevronDown
+                  size={15}
+                  style={{
+                    color: "#9CA3AF",
+                    transform: showOfficialRecords ? "rotate(180deg)" : "none",
+                    transition: "transform 150ms",
+                  }}
+                />
+              </button>
+              {showOfficialRecords && (
+                <div className="mt-4 flex flex-col gap-3">
+                  {[
+                    { label: "Occupation Permit", value: building.occupationPermitNumber },
+                    { label: "Permit Issued", value: formatDate(building.occupationPermitDate) },
+                    { label: "Building Type", value: building.buildingType },
+                    { label: "Block ID", value: building.blockId },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-start justify-between gap-2">
+                      <span style={{ fontSize: "13px", color: "#9CA3AF" }}>{label}</span>
+                      <span style={{ fontSize: "13px", color: "#555555", fontWeight: 500, textAlign: "right" }}>
+                        {value}
+                      </span>
+                    </div>
+                  ))}
+                  <p style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "4px" }}>
+                    Data sourced from Buildings Department, HKSAR
+                  </p>
+                </div>
+              )}
             </motion.div>
 
             {/* Gov Data Card */}
