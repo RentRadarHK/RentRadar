@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { searchAll } from "@/lib/supabase/queries";
 import type { SearchResult } from "@/lib/data/types";
-import SkylineIllustration from "@/components/SkylineIllustration";
+import HeroGraphic from "@/components/HeroGraphic";
 
 type BezierTuple = [number, number, number, number];
 const EASE: BezierTuple = [0.22, 1, 0.36, 1];
@@ -89,7 +89,7 @@ export default function Hero() {
         className="pointer-events-none absolute bottom-0 right-0 w-[520px] h-[340px] lg:w-[640px] lg:h-[420px] xl:w-[700px] xl:h-[460px]"
         aria-hidden="true"
       >
-        <SkylineIllustration />
+        <HeroGraphic />
       </motion.div>
 
       <div className="relative z-10 max-w-[1200px] mx-auto w-full">
