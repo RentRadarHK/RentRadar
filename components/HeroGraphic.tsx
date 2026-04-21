@@ -2,14 +2,14 @@ export default function HeroGraphic() {
   return (
     <svg
       className="rr-hero-graphic"
-      viewBox="0 0 500 480"
+      viewBox="0 0 400 400"
       preserveAspectRatio="xMidYMid meet"
       width="100%"
       height="100%"
       aria-hidden="true"
       style={{ display: 'block' }}
     >
-      <g transform="translate(250 300) scale(5) translate(-28 -54)">
+      <g transform="translate(200 260) scale(5.5) translate(-28 -54)">
         {/* Ghost rest-state arcs */}
         <path d="M14 16 A 14 14 0 0 1 42 16"
           stroke="#4D8B6F" strokeWidth="0.7"
