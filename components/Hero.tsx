@@ -88,6 +88,7 @@ export default function Hero() {
         transition={{ duration: 0.9, ease: EASE, delay: 0.15 }}
         className="pointer-events-none absolute bottom-0 right-0 w-[520px] h-[340px] lg:w-[640px] lg:h-[420px] xl:w-[700px] xl:h-[460px]"
         aria-hidden="true"
+        style={{ width: '100%', height: '100%', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
         <HeroGraphic />
       </motion.div>
