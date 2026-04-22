@@ -1,7 +1,7 @@
 ﻿import { Radio } from "lucide-react";
 
 const footerLinks = {
-  Product: ["Search", "Write a Review", "For Agents"],
+  Product: ["Search", "Write a Review", "How it works", "For Agents"],
   Company: ["About"],
   Legal: ["Privacy Policy", "Terms of Service"],
   Support: ["Help Centre", "Contact Us", "FAQ", "Report an Issue"],
@@ -40,12 +40,21 @@ export default function Footer() {
                 <ul className="flex flex-col gap-3">
                   {links.map((link) => (
                     <li key={link}>
-                      <a
-                        href={footerHrefs[link] ?? "#"}
-                        className="text-sm text-[#9CA3AF] hover:text-[#555555] transition-colors duration-150"
-                      >
-                        {link}
-                      </a>
+                      {footerHrefs[link] ? (
+                        <a
+                          href={footerHrefs[link]}
+                          className="text-sm text-[#8A8170] hover:text-[#555555] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4D8B6F] rounded-sm"
+                        >
+                          {link}
+                        </a>
+                      ) : (
+                        <span
+                          className="text-sm text-[#8A8170]"
+                          aria-label={`${link} coming soon`}
+                        >
+                          {link} (Coming soon)
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>

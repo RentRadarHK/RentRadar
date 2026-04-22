@@ -36,7 +36,7 @@ export default function Navbar() {
     { label: "How it works", href: "/how-it-works" },
     { label: "Search", href: "/search" },
     { label: "About", href: "/about" },
-    { label: "For Landlords & Agents", href: "#agents" },
+    { label: "For Landlords & Agents", href: "/#agents" },
   ];
 
   return (
@@ -64,7 +64,7 @@ export default function Navbar() {
               <Link
                 key={l.label}
                 href={l.href}
-                className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-150"
+                className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#555555] rounded-sm"
               >
                 {l.label}
               </Link>
@@ -73,7 +73,7 @@ export default function Navbar() {
             {isLandlord && (
               <Link
                 href="/dashboard"
-                className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-150 flex items-center gap-1.5"
+                className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-150 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#555555] rounded-sm"
               >
                 <LayoutDashboard size={14} />
                 Dashboard
@@ -82,7 +82,7 @@ export default function Navbar() {
 
             <Link
               href="/review"
-              className="text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-200 hover:shadow-md flex items-center gap-2"
+              className="text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-200 hover:shadow-md flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#555555]"
               style={{ background: "#4D8B6F" }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "#3A7059")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "#4D8B6F")}
@@ -95,7 +95,7 @@ export default function Navbar() {
           {/* Mobile toggle */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-1.5 rounded-lg text-white/80 hover:bg-white/10 transition-colors"
+            className="md:hidden p-1.5 rounded-lg text-white/80 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#555555]"
             aria-label="Toggle menu"
           >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -118,7 +118,7 @@ export default function Navbar() {
                   key={l.label}
                   href={l.href}
                   onClick={() => setMenuOpen(false)}
-                  className="text-sm font-medium text-white/80 hover:text-white"
+                  className="text-sm font-medium text-white/80 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#555555] rounded-sm"
                 >
                   {l.label}
                 </Link>
@@ -127,7 +127,7 @@ export default function Navbar() {
                 <Link
                   href="/dashboard"
                   onClick={() => setMenuOpen(false)}
-                  className="text-sm font-medium text-white/80 hover:text-white flex items-center gap-1.5"
+                  className="text-sm font-medium text-white/80 hover:text-white flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#555555] rounded-sm"
                 >
                   <LayoutDashboard size={14} />
                   Dashboard
@@ -136,7 +136,7 @@ export default function Navbar() {
               <Link
                 href="/review"
                 onClick={() => setMenuOpen(false)}
-                className="text-white text-sm font-semibold px-5 py-3 rounded-full text-center transition-colors flex items-center justify-center gap-2"
+                className="text-white text-sm font-semibold px-5 py-3 rounded-full text-center transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#555555]"
                 style={{ background: "#4D8B6F" }}
               >
                 <PenLine size={14} />

@@ -136,11 +136,12 @@ export default function Hero() {
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   placeholder="Search landlord name, building or address..."
-                  className="flex-1 bg-transparent px-4 py-4 text-sm text-[#555555] placeholder:text-[#9CA3AF] outline-none"
+                  aria-label="Search landlord, building, or address"
+                  className="flex-1 bg-transparent px-4 py-4 text-sm text-[#555555] placeholder:text-[#9CA3AF] outline-none focus-visible:ring-2 focus-visible:ring-[#4D8B6F] focus-visible:ring-inset"
                 />
                 <button
                   onClick={handleSearch}
-                  className="bg-[#4D8B6F] hover:bg-[#3A7059] text-white text-sm font-semibold px-6 py-3.5 m-1.5 rounded-[18px] shrink-0 transition-all duration-200 hover:shadow-md"
+                  className="bg-[#4D8B6F] hover:bg-[#3A7059] text-white text-sm font-semibold px-6 py-3.5 m-1.5 rounded-[18px] shrink-0 transition-all duration-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4D8B6F] focus-visible:ring-offset-2"
                 >
                   Search
                 </button>
@@ -296,7 +297,7 @@ export default function Hero() {
                   >
                     <button
                       onClick={handleSearch}
-                      className="text-xs font-semibold w-full text-center hover:underline transition-colors"
+                      className="text-xs font-semibold w-full text-center hover:underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4D8B6F] rounded-sm"
                       style={{ color: "#4D8B6F" }}
                     >
                       Press Enter to search all results →
