@@ -179,17 +179,23 @@ export default function SearchResults() {
   const [totalCounts, setTotalCounts] = useState<{ buildings: number; landlords: number } | null>(null);
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const buildingSuggestions = suggestions.filter((r) => r.type === "building").slice(0, 5);
+  const landlordSuggestions = suggestions.filter((r) => r.type === "landlord").slice(0, 3);
+  const suggestionItems = [...buildingSuggestions, ...landlordSuggestions];
 
   function handleSearch() {
     const trimmed = inputQ.trim();
     if (trimmed) router.push(`/search?q=${encodeURIComponent(trimmed)}`);
     else router.push("/search");
     setShowSuggestions(false);
+    setActiveSuggestionIndex(-1);
   }
 
   function handleSuggestionSelect(result: SearchResult) {
     setShowSuggestions(false);
+    setActiveSuggestionIndex(-1);
     router.push(result.type === "building" ? `/building/${result.id}` : `/landlord/${result.id}`);
   }
 
@@ -203,6 +209,7 @@ export default function SearchResults() {
     function handleOutsideClick(e: MouseEvent) {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
+        setActiveSuggestionIndex(-1);
       }
     }
     document.addEventListener("mousedown", handleOutsideClick);
@@ -247,6 +254,7 @@ export default function SearchResults() {
     if (trimmed.length < 2 || trimmed === query.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setActiveSuggestionIndex(-1);
       return;
     }
 
@@ -258,11 +266,13 @@ export default function SearchResults() {
           const combined = [...buildings.slice(0, 5), ...landlords.slice(0, 3)];
           setSuggestions(combined);
           setShowSuggestions(combined.length > 0);
+          setActiveSuggestionIndex(-1);
         })
         .catch(() => {
           if (cancelled) return;
           setSuggestions([]);
           setShowSuggestions(false);
+          setActiveSuggestionIndex(-1);
         });
     }, 300);
 
@@ -359,11 +369,35 @@ export default function SearchResults() {
                 value={inputQ}
                 onChange={(e) => setInputQ(e.target.value)}
                 onFocus={() => {
-                  if (suggestions.length > 0 && inputQ.trim().length >= 2) setShowSuggestions(true);
+                  if (suggestionItems.length > 0 && inputQ.trim().length >= 2) setShowSuggestions(true);
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSearch();
-                  if (e.key === "Escape") setShowSuggestions(false);
+                  if (e.key === "ArrowDown" && showSuggestions && suggestionItems.length > 0) {
+                    e.preventDefault();
+                    setActiveSuggestionIndex((prev) =>
+                      prev < suggestionItems.length - 1 ? prev + 1 : 0
+                    );
+                    return;
+                  }
+                  if (e.key === "ArrowUp" && showSuggestions && suggestionItems.length > 0) {
+                    e.preventDefault();
+                    setActiveSuggestionIndex((prev) =>
+                      prev > 0 ? prev - 1 : suggestionItems.length - 1
+                    );
+                    return;
+                  }
+                  if (e.key === "Enter") {
+                    if (showSuggestions && activeSuggestionIndex >= 0 && activeSuggestionIndex < suggestionItems.length) {
+                      e.preventDefault();
+                      handleSuggestionSelect(suggestionItems[activeSuggestionIndex]);
+                      return;
+                    }
+                    handleSearch();
+                  }
+                  if (e.key === "Escape") {
+                    setShowSuggestions(false);
+                    setActiveSuggestionIndex(-1);
+                  }
                 }}
                 placeholder="Search buildings, landlords, districts…"
                 className="flex-1 px-4 py-4 text-sm bg-transparent outline-none placeholder:text-[#9CA3AF] text-[#555555]"
@@ -385,15 +419,18 @@ export default function SearchResults() {
                 style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.14)" }}
               >
                 <div className="max-h-[380px] overflow-y-auto">
-                  {suggestions
-                    .filter((r) => r.type === "building")
-                    .slice(0, 5)
-                    .map((r) => (
+                  {buildingSuggestions.map((r, idx) => (
                       <button
                         key={`building-${r.id}`}
                         onClick={() => handleSuggestionSelect(r)}
+                        onMouseEnter={() => setActiveSuggestionIndex(idx)}
                         className="w-full text-left px-4 py-3 transition-colors hover:bg-[#F5F0E8]"
-                        style={{ borderBottom: "1px solid #F5F0E8" }}
+                        style={{
+                          borderBottom: "1px solid #F5F0E8",
+                          background: activeSuggestionIndex === idx ? "#F5F0E8" : "transparent",
+                        }}
+                        aria-selected={activeSuggestionIndex === idx}
+                        role="option"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-[#E4F0EB]">
@@ -407,15 +444,20 @@ export default function SearchResults() {
                       </button>
                     ))}
 
-                  {suggestions
-                    .filter((r) => r.type === "landlord")
-                    .slice(0, 3)
-                    .map((r) => (
+                  {landlordSuggestions.map((r, landlordIdx) => {
+                    const idx = buildingSuggestions.length + landlordIdx;
+                    return (
                       <button
                         key={`landlord-${r.id}`}
                         onClick={() => handleSuggestionSelect(r)}
+                        onMouseEnter={() => setActiveSuggestionIndex(idx)}
                         className="w-full text-left px-4 py-3 transition-colors hover:bg-[#F5F0E8]"
-                        style={{ borderBottom: "1px solid #F5F0E8" }}
+                        style={{
+                          borderBottom: "1px solid #F5F0E8",
+                          background: activeSuggestionIndex === idx ? "#F5F0E8" : "transparent",
+                        }}
+                        aria-selected={activeSuggestionIndex === idx}
+                        role="option"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-[#EDE8E3]">
@@ -427,7 +469,8 @@ export default function SearchResults() {
                           </div>
                         </div>
                       </button>
-                    ))}
+                    );
+                  })}
                 </div>
                 <button
                   onClick={handleSearch}
