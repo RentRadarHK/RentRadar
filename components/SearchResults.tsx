@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Building2, User, Star, AlertTriangle, ChevronRight, Search } from "lucide-react";
@@ -177,16 +177,36 @@ export default function SearchResults() {
   const [allBuildings, setAllBuildings] = useState<SearchResult[]>([]);
   const [allLandlords, setAllLandlords] = useState<SearchResult[]>([]);
   const [totalCounts, setTotalCounts] = useState<{ buildings: number; landlords: number } | null>(null);
+  const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   function handleSearch() {
     const trimmed = inputQ.trim();
     if (trimmed) router.push(`/search?q=${encodeURIComponent(trimmed)}`);
     else router.push("/search");
+    setShowSuggestions(false);
+  }
+
+  function handleSuggestionSelect(result: SearchResult) {
+    setShowSuggestions(false);
+    router.push(result.type === "building" ? `/building/${result.id}` : `/landlord/${result.id}`);
   }
 
   // Fetch live totals once on mount
   useEffect(() => {
     getCounts().then(setTotalCounts);
+  }, []);
+
+  // Close predictive dropdown on outside click
+  useEffect(() => {
+    function handleOutsideClick(e: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
   // Keep the search box value in sync with URL changes (e.g. back/forward)
@@ -220,6 +240,37 @@ export default function SearchResults() {
       cancelled = true;
     };
   }, [query]);
+
+  // Predictive search suggestions while user types (same behavior as homepage)
+  useEffect(() => {
+    const trimmed = inputQ.trim();
+    if (trimmed.length < 2 || trimmed === query.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      searchAll(trimmed)
+        .then(({ buildings, landlords }) => {
+          if (cancelled) return;
+          const combined = [...buildings.slice(0, 5), ...landlords.slice(0, 3)];
+          setSuggestions(combined);
+          setShowSuggestions(combined.length > 0);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setSuggestions([]);
+          setShowSuggestions(false);
+        });
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [inputQ, query]);
 
   const searchedBuildings = allBuildings;
   const searchedLandlords = allLandlords;
@@ -297,28 +348,96 @@ export default function SearchResults() {
 
         {/* Search bar */}
         <div className="mb-6">
-          <div
-            className="flex items-center bg-white rounded-full overflow-hidden"
-            style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.08)", border: "1px solid #E2D9CE" }}
-          >
-            <Search size={18} className="ml-5 shrink-0" style={{ color: "#9CA3AF" }} />
-            <input
-              type="text"
-              value={inputQ}
-              onChange={(e) => setInputQ(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Search buildings, landlords, districts…"
-              className="flex-1 px-4 py-4 text-sm bg-transparent outline-none placeholder:text-[#9CA3AF] text-[#555555]"
-            />
-            <button
-              onClick={handleSearch}
-              className="mr-1.5 px-5 py-2.5 rounded-full text-sm font-bold text-white transition-colors"
-              style={{ background: "#4D8B6F" }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#3A7059")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#4D8B6F")}
+          <div ref={searchContainerRef} className="relative">
+            <div
+              className="flex items-center bg-white rounded-full overflow-hidden"
+              style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.08)", border: "1px solid #E2D9CE" }}
             >
-              Search
-            </button>
+              <Search size={18} className="ml-5 shrink-0" style={{ color: "#9CA3AF" }} />
+              <input
+                type="text"
+                value={inputQ}
+                onChange={(e) => setInputQ(e.target.value)}
+                onFocus={() => {
+                  if (suggestions.length > 0 && inputQ.trim().length >= 2) setShowSuggestions(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                  if (e.key === "Escape") setShowSuggestions(false);
+                }}
+                placeholder="Search buildings, landlords, districts…"
+                className="flex-1 px-4 py-4 text-sm bg-transparent outline-none placeholder:text-[#9CA3AF] text-[#555555]"
+              />
+              <button
+                onClick={handleSearch}
+                className="mr-1.5 px-5 py-2.5 rounded-full text-sm font-bold text-white transition-colors"
+                style={{ background: "#4D8B6F" }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#3A7059")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#4D8B6F")}
+              >
+                Search
+              </button>
+            </div>
+
+            {showSuggestions && suggestions.length > 0 && (
+              <div
+                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-[16px] z-20 overflow-hidden"
+                style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.14)" }}
+              >
+                <div className="max-h-[380px] overflow-y-auto">
+                  {suggestions
+                    .filter((r) => r.type === "building")
+                    .slice(0, 5)
+                    .map((r) => (
+                      <button
+                        key={`building-${r.id}`}
+                        onClick={() => handleSuggestionSelect(r)}
+                        className="w-full text-left px-4 py-3 transition-colors hover:bg-[#F5F0E8]"
+                        style={{ borderBottom: "1px solid #F5F0E8" }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-[#E4F0EB]">
+                            <Building2 size={15} style={{ color: "#555555" }} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-[#555555] truncate">{r.name}</p>
+                            <p className="text-xs text-[#9CA3AF] truncate">{r.address} · {r.district}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+
+                  {suggestions
+                    .filter((r) => r.type === "landlord")
+                    .slice(0, 3)
+                    .map((r) => (
+                      <button
+                        key={`landlord-${r.id}`}
+                        onClick={() => handleSuggestionSelect(r)}
+                        className="w-full text-left px-4 py-3 transition-colors hover:bg-[#F5F0E8]"
+                        style={{ borderBottom: "1px solid #F5F0E8" }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-[#EDE8E3]">
+                            <User size={15} style={{ color: "#6B7280" }} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-[#555555] truncate">{r.name}</p>
+                            <p className="text-xs text-[#9CA3AF] truncate">{r.market} · {r.reviewCount} reviews</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                </div>
+                <button
+                  onClick={handleSearch}
+                  className="w-full px-4 py-3 text-xs font-semibold transition-colors hover:underline"
+                  style={{ color: "#4D8B6F" }}
+                >
+                  Press Enter to search all results →
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
