@@ -1,4 +1,4 @@
-﻿import { Radio } from "lucide-react";
+﻿import Image from "next/image";
 
 const footerLinks = {
   Product: ["Search", "Write a Review", "How it works", "For Agents"],
@@ -21,11 +21,14 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row gap-12 mb-14">
           {/* Brand */}
           <div className="shrink-0 max-w-[220px]">
-            <div className="flex items-center gap-2 mb-4">
-              <Radio size={20} className="text-[#555555]" />
-              <span className="text-[#555555] font-bold text-[17px] tracking-tight">
-                Rent<span className="text-[#555555]">Radar</span>
-              </span>
+            <div className="mb-4">
+              <Image
+                src="/brand/logo-primary.svg"
+                alt="RentRadar"
+                width={140}
+                height={32}
+                className="h-8 w-auto"
+              />
             </div>
             <p className="text-[#9CA3AF] text-sm leading-relaxed">
               The rental market&apos;s trust layer — Hong Kong.
