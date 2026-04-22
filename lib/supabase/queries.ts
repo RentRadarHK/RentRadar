@@ -280,6 +280,41 @@ function toLandlordSearchResult(l: Landlord): SearchResult {
   };
 }
 
+function normalizeSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function scoreSearchResult(result: SearchResult, queryWords: string[], fullQuery: string): number {
+  const fields = [result.name, result.address ?? "", result.district, result.market]
+    .map(normalizeSearchText);
+
+  let score = 0;
+
+  for (const field of fields) {
+    if (!field) continue;
+
+    // Strong signals first
+    if (field === fullQuery) score += 30;
+    else if (field.startsWith(fullQuery)) score += 18;
+    else if (field.includes(fullQuery)) score += 10;
+
+    for (const word of queryWords) {
+      if (field === word) score += 8;
+      else if (field.startsWith(word)) score += 5;
+      else if (field.includes(word)) score += 3;
+    }
+  }
+
+  // Mild quality signal as tie-breaker
+  score += Math.min(result.reviewCount, 30) * 0.1 + result.rating * 0.2;
+
+  return score;
+}
+
 // ── Public query functions ────────────────────────────────────────────────────
 
 export async function getBuilding(id: string): Promise<Building | null> {
@@ -449,12 +484,8 @@ export async function searchAll(
   }
 
   // Split query into words (min 2 chars each) for forgiving word-by-word matching
-  const words = query
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
+  const normalizedQuery = normalizeSearchText(query);
+  const words = normalizedQuery
     .split(" ")
     .filter((w) => w.length >= 2);
 
@@ -517,6 +548,23 @@ export async function searchAll(
     govDataAvailable: false,
   }));
 
-  return { buildings, landlords };
+  // Deterministic, relevance-first sorting for better UX
+  const sortedBuildings = buildings
+    .map((result) => ({
+      result,
+      score: scoreSearchResult(result, words, normalizedQuery),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.result);
+
+  const sortedLandlords = landlords
+    .map((result) => ({
+      result,
+      score: scoreSearchResult(result, words, normalizedQuery),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.result);
+
+  return { buildings: sortedBuildings, landlords: sortedLandlords };
 }
 

@@ -173,6 +173,7 @@ export default function SearchResults() {
   const [inputQ, setInputQ] = useState(query);
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [allBuildings, setAllBuildings] = useState<SearchResult[]>([]);
   const [allLandlords, setAllLandlords] = useState<SearchResult[]>([]);
   const [totalCounts, setTotalCounts] = useState<{ buildings: number; landlords: number } | null>(null);
@@ -188,13 +189,36 @@ export default function SearchResults() {
     getCounts().then(setTotalCounts);
   }, []);
 
+  // Keep the search box value in sync with URL changes (e.g. back/forward)
+  useEffect(() => {
+    setInputQ(query);
+  }, [query]);
+
   useEffect(() => {
     setLoading(true);
-    searchAll(query.length >= 2 ? query : "").then(({ buildings, landlords }) => {
-      setAllBuildings(buildings);
-      setAllLandlords(landlords);
-      setLoading(false);
-    });
+    setFetchError(null);
+    let cancelled = false;
+
+    searchAll(query.length >= 2 ? query : "")
+      .then(({ buildings, landlords }) => {
+        if (cancelled) return;
+        setAllBuildings(buildings);
+        setAllLandlords(landlords);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAllBuildings([]);
+        setAllLandlords([]);
+        setFetchError("We hit a temporary issue loading search results. Please try again.");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [query]);
 
   const searchedBuildings = allBuildings;
@@ -358,8 +382,32 @@ export default function SearchResults() {
           </motion.div>
         )}
 
+        {/* Error state */}
+        {!loading && fetchError && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[16px] p-8 text-center"
+            style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
+          >
+            <p className="text-base font-bold text-[#555555] mb-2">Search is temporarily unavailable</p>
+            <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
+              {fetchError}
+            </p>
+            <button
+              onClick={handleSearch}
+              className="px-5 py-2.5 rounded-full text-sm font-bold text-white transition-colors"
+              style={{ background: "#4D8B6F" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#3A7059")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "#4D8B6F")}
+            >
+              Try again
+            </button>
+          </motion.div>
+        )}
+
         {/* Results — split or unified */}
-        {!loading && !noResults && totalResults > 0 && (
+        {!loading && !fetchError && !noResults && totalResults > 0 && (
           <div className={splitView ? "flex flex-col lg:flex-row gap-8 items-start" : ""}>
 
             {/* Buildings column */}
