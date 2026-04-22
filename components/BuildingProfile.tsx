@@ -228,19 +228,19 @@ export default function BuildingProfile({
         {/* ── Breadcrumb ── */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-[#6B7280] mb-8 flex-wrap">
           <span className="flex items-center gap-1">
-            <Link href="/search" className="text-[#4D8B6F] hover:underline transition-colors">
+            <Link href="/search" className="inline-flex items-center min-h-9 px-1 text-[#4D8B6F] hover:underline transition-colors">
               {building.market}
             </Link>
             <ChevronRight size={12} className="text-[#9CA3AF]" />
           </span>
           <span className="flex items-center gap-1">
-            <Link href={`/search?region=${regionSlug(building.region)}`} className="text-[#4D8B6F] hover:underline transition-colors">
+            <Link href={`/search?region=${regionSlug(building.region)}`} className="inline-flex items-center min-h-9 px-1 text-[#4D8B6F] hover:underline transition-colors">
               {building.region}
             </Link>
             <ChevronRight size={12} className="text-[#9CA3AF]" />
           </span>
           <span className="flex items-center gap-1">
-            <Link href={`/search?district=${encodeURIComponent(building.district)}`} className="text-[#4D8B6F] hover:underline transition-colors">
+            <Link href={`/search?district=${encodeURIComponent(building.district)}`} className="inline-flex items-center min-h-9 px-1 text-[#4D8B6F] hover:underline transition-colors">
               {building.district}
             </Link>
             <ChevronRight size={12} className="text-[#9CA3AF]" />
@@ -279,10 +279,7 @@ export default function BuildingProfile({
               </p>
 
               {/* Stats row */}
-              <div
-                className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#6B7280] mb-5 pb-5"
-                style={{ borderBottom: "1px solid #F5F0E8" }}
-              >
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-x-5 sm:gap-y-2 text-sm text-[#6B7280] mb-5 pb-5" style={{ borderBottom: "1px solid #F5F0E8" }}>
                 <span className="flex items-center gap-1.5">
                   <Calendar size={13} className="text-[#9CA3AF]" />
                   Built {permitYear}
@@ -608,7 +605,7 @@ export default function BuildingProfile({
                   <button
                     key={f}
                     onClick={() => setActiveFilter(f)}
-                    className="text-xs font-semibold px-4 py-2 rounded-full transition-all duration-150"
+                    className="text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full transition-all duration-150"
                     style={
                       activeFilter === f
                         ? { background: "#555555", color: "#fff" }
@@ -737,13 +734,13 @@ export default function BuildingProfile({
                         <span className="text-[11px]">Helpful?</span>
                         <button
                           aria-label="Helpful"
-                          className="p-1 rounded transition-colors hover:text-[#555555]"
+                          className="p-2 rounded transition-colors hover:text-[#555555]"
                         >
                           <ThumbsUp size={13} />
                         </button>
                         <button
                           aria-label="Not helpful"
-                          className="p-1 rounded transition-colors hover:text-red-400"
+                          className="p-2 rounded transition-colors hover:text-red-400"
                         >
                           <ThumbsDown size={13} />
                         </button>
@@ -923,7 +920,7 @@ export default function BuildingProfile({
             >
               <button
                 onClick={() => setShowOfficialRecords((v) => !v)}
-                className="w-full flex items-center justify-between"
+                className="w-full flex items-center justify-between min-h-11"
               >
                 <span className="text-sm font-semibold" style={{ color: "#555555" }}>
                   Official Records
@@ -945,9 +942,9 @@ export default function BuildingProfile({
                     { label: "Building Type", value: building.buildingType },
                     { label: "Block ID", value: building.blockId },
                   ].map(({ label, value }) => (
-                    <div key={label} className="flex items-start justify-between gap-2">
+                    <div key={label} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
                       <span style={{ fontSize: "13px", color: "#9CA3AF" }}>{label}</span>
-                      <span style={{ fontSize: "13px", color: "#555555", fontWeight: 500, textAlign: "right" }}>
+                      <span style={{ fontSize: "13px", color: "#555555", fontWeight: 500, textAlign: "left" }} className="sm:text-right">
                         {value}
                       </span>
                     </div>

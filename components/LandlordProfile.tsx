@@ -271,7 +271,7 @@ export default function LandlordProfile({
         {/* ── 1. Breadcrumb ── */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-[#6B7280] mb-8 flex-wrap">
           <span className="flex items-center gap-1">
-            <Link href="/search" className="text-[#4D8B6F] hover:underline transition-colors">
+            <Link href="/search" className="inline-flex items-center min-h-9 px-1 text-[#4D8B6F] hover:underline transition-colors">
               {landlordData.activeMarkets[0] ?? "Hong Kong"}
             </Link>
             <ChevronRight size={12} className="text-[#9CA3AF]" />
@@ -375,8 +375,8 @@ export default function LandlordProfile({
               </h2>
               <div className="flex flex-col gap-5">
                 {ratingDimensionsDisplay.map(({ label, score }) => (
-                  <div key={label} className="flex items-center gap-4">
-                    <span className="text-sm text-[#6B7280] w-44 shrink-0">{label}</span>
+                  <div key={label} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <span className="text-sm text-[#6B7280] w-full sm:w-44 shrink-0">{label}</span>
                     <AnimatedBar score={score} />
                     <span
                       className="text-sm font-bold w-8 text-right shrink-0"
@@ -530,7 +530,7 @@ export default function LandlordProfile({
                   <button
                     key={f}
                     onClick={() => setActiveFilter(f)}
-                    className="text-xs font-semibold px-4 py-2 rounded-full transition-all duration-150"
+                    className="text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full transition-all duration-150"
                     style={
                       activeFilter === f
                         ? { background: "#555555", color: "#fff" }
@@ -649,13 +649,13 @@ export default function LandlordProfile({
                       <div className="flex items-center gap-2" style={{ color: "#9CA3AF" }}>
                         <span className="text-[11px]">Helpful?</span>
                         <button
-                          className="p-1 rounded transition-colors hover:text-[#555555]"
+                          className="p-2 rounded transition-colors hover:text-[#555555]"
                           aria-label="Mark helpful"
                         >
                           <ThumbsUp size={13} />
                         </button>
                         <button
-                          className="p-1 rounded transition-colors hover:text-red-400"
+                          className="p-2 rounded transition-colors hover:text-red-400"
                           aria-label="Mark not helpful"
                         >
                           <ThumbsDown size={13} />

@@ -15,6 +15,8 @@ const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const FILTERS = ["All", "Buildings", "Landlords", "With Reviews", "Government Orders"] as const;
 type Filter = (typeof FILTERS)[number];
+const SORT_CHIPS = ["Most reviewed", "Highest rated", "Recent issues", "Has govt orders"] as const;
+type SortChip = (typeof SORT_CHIPS)[number];
 
 function StarRating({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
@@ -172,6 +174,7 @@ export default function SearchResults() {
   const query = searchParams.get("q") ?? "";
   const [inputQ, setInputQ] = useState(query);
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
+  const [activeSort, setActiveSort] = useState<SortChip>("Most reviewed");
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [allBuildings, setAllBuildings] = useState<SearchResult[]>([]);
@@ -315,7 +318,55 @@ export default function SearchResults() {
     searchedLandlords
   );
 
-  const totalResults = visibleBuildings.length + visibleLandlords.length;
+  function applySort(buildings: SearchResult[], landlords: SearchResult[]): {
+    buildings: SearchResult[];
+    landlords: SearchResult[];
+  } {
+    const byReviews = (a: SearchResult, b: SearchResult) =>
+      b.reviewCount - a.reviewCount || b.rating - a.rating;
+    const byRating = (a: SearchResult, b: SearchResult) =>
+      b.rating - a.rating || b.reviewCount - a.reviewCount;
+
+    if (activeSort === "Most reviewed") {
+      return {
+        buildings: [...buildings].sort(byReviews),
+        landlords: [...landlords].sort(byReviews),
+      };
+    }
+
+    if (activeSort === "Highest rated") {
+      return {
+        buildings: [...buildings].sort(byRating),
+        landlords: [...landlords].sort(byRating),
+      };
+    }
+
+    if (activeSort === "Recent issues") {
+      return {
+        buildings: [...buildings].sort((a, b) => {
+          const aIssue = a.badge === "Orders on Record" ? 1 : 0;
+          const bIssue = b.badge === "Orders on Record" ? 1 : 0;
+          return bIssue - aIssue || byReviews(a, b);
+        }),
+        landlords: [...landlords].sort(byReviews),
+      };
+    }
+
+    // Has govt orders
+    return {
+      buildings: buildings
+        .filter((r) => r.badge === "Orders on Record")
+        .sort(byReviews),
+      landlords: [],
+    };
+  }
+
+  const { buildings: sortedBuildings, landlords: sortedLandlords } = applySort(
+    visibleBuildings,
+    visibleLandlords
+  );
+
+  const totalResults = sortedBuildings.length + sortedLandlords.length;
   const noResults = !loading && query.length >= 2 && totalResults === 0;
 
   // Split view: show two columns when "All" is active
@@ -502,6 +553,29 @@ export default function SearchResults() {
           ))}
         </div>
 
+        {/* Decision-focused quick sort chips */}
+        <div className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#8A8170] mb-2">
+            Quick sort
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {SORT_CHIPS.map((chip) => (
+              <button
+                key={chip}
+                onClick={() => setActiveSort(chip)}
+                className="text-xs font-semibold px-4 py-2.5 rounded-full transition-all duration-150"
+                style={
+                  activeSort === chip
+                    ? { background: "#4D8B6F", color: "#fff" }
+                    : { background: "#fff", color: "#6B7280", border: "1px solid #E2D9CE" }
+                }
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Loading state */}
         {loading && <SearchSkeleton />}
 
@@ -573,7 +647,7 @@ export default function SearchResults() {
           <div className={splitView ? "flex flex-col lg:flex-row gap-8 items-start" : ""}>
 
             {/* Buildings column */}
-            {visibleBuildings.length > 0 && (
+            {sortedBuildings.length > 0 && (
               <div className={splitView ? "w-full lg:w-1/2" : "w-full"}>
                 {splitView && (
                   <div className="flex items-center gap-2 mb-4">
@@ -581,13 +655,13 @@ export default function SearchResults() {
                     <h2 className="font-bold text-[#555555]">
                       Buildings
                       <span className="ml-2 text-sm font-normal text-[#6B7280]">
-                        ({visibleBuildings.length})
+                        ({sortedBuildings.length})
                       </span>
                     </h2>
                   </div>
                 )}
                 <div className="flex flex-col gap-4">
-                  {visibleBuildings.map((r, i) => (
+                  {sortedBuildings.map((r, i) => (
                     <ResultCard key={r.id} result={r} index={i} />
                   ))}
                 </div>
@@ -595,7 +669,7 @@ export default function SearchResults() {
             )}
 
             {/* Landlords column */}
-            {visibleLandlords.length > 0 && (
+            {sortedLandlords.length > 0 && (
               <div className={splitView ? "w-full lg:w-1/2" : "w-full mt-8"}>
                 {splitView && (
                   <div className="flex items-center gap-2 mb-4">
@@ -603,13 +677,13 @@ export default function SearchResults() {
                     <h2 className="font-bold text-[#555555]">
                       Landlords
                       <span className="ml-2 text-sm font-normal text-[#6B7280]">
-                        ({visibleLandlords.length})
+                        ({sortedLandlords.length})
                       </span>
                     </h2>
                   </div>
                 )}
                 <div className="flex flex-col gap-4">
-                  {visibleLandlords.map((r, i) => (
+                  {sortedLandlords.map((r, i) => (
                     <ResultCard key={r.id} result={r} index={i} />
                   ))}
                 </div>
