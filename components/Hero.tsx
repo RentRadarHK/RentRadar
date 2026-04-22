@@ -118,7 +118,7 @@ export default function Hero() {
             {...fadeUp(2)}
             className="text-lg sm:text-xl text-[#6B7280] leading-relaxed mb-10 max-w-[520px]"
           >
-            Everything you need to know before signing a lease in Hong Kong.
+            Things you need to know before signing a lease in Hong Kong.
             Building data, tenant reviews, and landlord history — all in one place.
           </motion.p>
 
