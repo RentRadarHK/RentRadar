@@ -487,3 +487,42 @@ export async function sendResponseModerationEmail(params: ResponseModerationPara
 
   if (error) console.error("Response moderation email error:", JSON.stringify(error));
 }
+
+// ── Building correction email ────────────────────────────────────────────────
+
+export async function sendBuildingCorrectionEmail(params: {
+  buildingId: string;
+  buildingName: string;
+  message: string;
+}) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rentradar.co";
+  const buildingUrl = `${siteUrl}/building/${params.buildingId}`;
+  const esc = (s: string) => s.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"></head>
+    <body style="background:#F5F0E8;font-family:Arial,sans-serif;margin:0;padding:40px 20px;">
+      <div style="max-width:560px;margin:0 auto;background:white;border-radius:16px;padding:32px;border:1px solid #E2D9CE;">
+        <p style="color:#9CA3AF;font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.05em;">RentRadar · Building data correction</p>
+        <h1 style="color:#111827;font-size:20px;margin:0 0 16px;">${esc(params.buildingName)}</h1>
+        <p style="margin:0 0 12px;"><a href="${buildingUrl}" style="color:#4D8B6F;text-decoration:none;">${buildingUrl}</a></p>
+        <div style="background:#F9FAFB;border-left:3px solid #4D8B6F;border-radius:4px;padding:14px 16px;">
+          <p style="color:#374151;font-size:14px;line-height:1.65;margin:0;white-space:pre-wrap;">${esc(params.message)}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const { error } = await resend.emails.send({
+    from: "RentRadar <noreply@rentradar.co>",
+    to: "joe@rentradar.co",
+    subject: `Building correction: ${params.buildingName}`,
+    html,
+  });
+
+  if (error) throw new Error(JSON.stringify(error));
+}

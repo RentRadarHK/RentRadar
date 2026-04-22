@@ -90,7 +90,7 @@ function regionSlug(r: string): string {
   return r.toLowerCase();
 }
 
-const REVIEW_FILTERS = ["All", "By Flat", "Positive", "Critical"] as const;
+const REVIEW_FILTERS = ["All", "Positive", "Critical"] as const;
 type ReviewFilter = (typeof REVIEW_FILTERS)[number];
 
 function filterReviews(list: Review[], filter: ReviewFilter): Review[] {
@@ -99,11 +99,79 @@ function filterReviews(list: Review[], filter: ReviewFilter): Review[] {
       return list.filter((r) => r.rating >= 4);
     case "Critical":
       return list.filter((r) => r.rating <= 2);
-    case "By Flat":
-      return [...list].sort((a, b) => a.flatRef.localeCompare(b.flatRef));
     default:
       return list;
   }
+}
+
+function CorrectionForm({ buildingId, buildingName }: { buildingId: string; buildingName: string }) {
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSent, setIsSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmitCorrection() {
+    const trimmed = message.trim();
+    if (trimmed.length < 10) {
+      setError("Please add at least 10 characters so we can review properly.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/buildings/correction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          buildingId,
+          buildingName,
+          message: trimmed,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setIsSent(true);
+      setMessage("");
+    } catch {
+      setError("Could not send correction right now. Please email joe@rentradar.co directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (isSent) {
+    return (
+      <p className="text-xs font-semibold" style={{ color: "#4D8B6F" }}>
+        Thanks, your correction was sent to joe@rentradar.co.
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Describe the issue with this building data..."
+        className="w-full text-xs rounded-[10px] p-3 outline-none resize-y min-h-[90px]"
+        style={{ border: "1px solid #E2D9CE", color: "#555555", background: "#F5F0E8" }}
+      />
+      <button
+        onClick={handleSubmitCorrection}
+        disabled={isSubmitting}
+        className="self-start text-xs font-semibold px-4 py-2 rounded-[10px] transition-colors"
+        style={{ background: "#4D8B6F", color: "#fff", opacity: isSubmitting ? 0.7 : 1 }}
+      >
+        {isSubmitting ? "Sending..." : "Submit correction"}
+      </button>
+      {error && (
+        <p className="text-xs" style={{ color: "#A83820" }}>
+          {error}
+        </p>
+      )}
+    </div>
+  );
 }
 
 
@@ -128,6 +196,13 @@ export default function BuildingProfile({
   const buildingReviews = propReviews ?? [];
   const visibleReviews = filterReviews(buildingReviews, activeFilter);
   const linkedLandlords = propLandlords ?? [];
+  const reviewCount = buildingReviews.length;
+  const averageRating =
+    reviewCount > 0
+      ? Math.round(
+          (buildingReviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount) * 10
+        ) / 10
+      : null;
 
   const permitYear = new Date(building.occupationPermitDate).getFullYear();
   const hasOutstandingOrders = building.statutoryOrders.some(
@@ -233,12 +308,16 @@ export default function BuildingProfile({
               {/* Rating + badges */}
               <div className="flex items-center gap-5 mb-4">
                 <span className="font-extrabold leading-none" style={{ fontSize: "52px", color: "#555555" }}>
-                  {building.avgRating}
+                  {averageRating ?? "—"}
                 </span>
                 <div>
-                  <StarRating stars={Math.round(building.avgRating)} size={22} />
+                  {averageRating !== null ? (
+                    <StarRating stars={Math.round(averageRating)} size={22} />
+                  ) : (
+                    <p className="text-sm font-semibold text-[#6B7280]">Yet to be reviewed</p>
+                  )}
                   <p className="text-sm text-[#6B7280] mt-1">
-                    Based on {building.totalReviews} reviews
+                    Based on {reviewCount} review{reviewCount !== 1 ? "s" : ""}
                   </p>
                 </div>
               </div>
@@ -394,6 +473,7 @@ export default function BuildingProfile({
             {linkedLandlords.length > 0 && (
               <motion.div
                 {...cardFade(0.05)}
+                id="linked-landlords"
                 className="bg-white rounded-[16px] p-8"
                 style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}
               >
@@ -519,7 +599,7 @@ export default function BuildingProfile({
                 <h2 className="text-xl font-bold text-[#555555]">
                   Tenant reviews for this building
                 </h2>
-                <span className="text-sm text-[#6B7280]">({building.totalReviews})</span>
+                <span className="text-sm text-[#6B7280]">({reviewCount})</span>
               </div>
 
               {/* Filters */}
@@ -700,7 +780,7 @@ export default function BuildingProfile({
                 ))}
 
                 {/* Subscription gate */}
-                {buildingReviews.length > 1 && (
+                {reviewCount > 1 && (
                   <div
                     className="rounded-[16px] p-8 text-center"
                     style={{ background: "#E4F0EB", border: "1px solid #4D8B6F" }}
@@ -712,7 +792,7 @@ export default function BuildingProfile({
                       <Lock size={20} style={{ color: "#4D8B6F" }} />
                     </div>
                     <h3 className="font-bold text-[#555555] text-lg mb-2">
-                      Read all {buildingReviews.length} reviews
+                      Read all {reviewCount} reviews
                     </h3>
                     <p className="text-sm text-[#6B7280] mb-6 max-w-xs mx-auto leading-relaxed">
                       Subscribe to access every review for this building and every other property on RentRadar.
@@ -730,7 +810,7 @@ export default function BuildingProfile({
                 )}
               </div>
 
-              {buildingReviews.length > 3 && (
+              {reviewCount > 3 && (
                 <div className="mt-7 flex justify-center">
                   <button
                     className="text-sm font-semibold px-8 py-3 rounded-[12px] transition-all duration-200"
@@ -794,8 +874,8 @@ export default function BuildingProfile({
             >
               <div className="grid grid-cols-2 gap-3 mb-5">
                 {[
-                  { label: "Reviews", value: `${building.totalReviews}` },
-                  { label: "Rating", value: `${building.avgRating} / 5` },
+                  { label: "Reviews", value: `${reviewCount}` },
+                  { label: "Rating", value: averageRating !== null ? `${averageRating} / 5` : "Yet to be reviewed" },
                   { label: "Built", value: `${permitYear}` },
                   building.units > 0
                     ? { label: "Units", value: `${building.units}` }
@@ -824,13 +904,15 @@ export default function BuildingProfile({
               >
                 Write a Review
               </Link>
-              <Link
-                href="/search"
-                className="w-full text-sm font-medium flex items-center justify-center gap-1.5 py-2 transition-colors"
-                style={{ color: "#4D8B6F" }}
-              >
-                View All Landlords
-              </Link>
+              {linkedLandlords.length > 0 && (
+                <Link
+                  href={`#linked-landlords`}
+                  className="w-full text-sm font-medium flex items-center justify-center gap-1.5 py-2 transition-colors"
+                  style={{ color: "#4D8B6F" }}
+                >
+                  View Landlords in this Building
+                </Link>
+              )}
             </motion.div>
 
             {/* Official Records — collapsible */}
@@ -908,13 +990,7 @@ export default function BuildingProfile({
               <p className="text-xs text-[#6B7280] leading-relaxed mb-3">
                 Help us keep records accurate. Submit a correction and we&apos;ll review it within 48 hours.
               </p>
-              <a
-                href="#"
-                className="text-xs font-semibold transition-colors"
-                style={{ color: "#4D8B6F" }}
-              >
-                Submit a correction →
-              </a>
+              <CorrectionForm buildingId={building.id} buildingName={building.name} />
             </motion.div>
 
           </div>

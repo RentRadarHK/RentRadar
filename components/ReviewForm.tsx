@@ -387,7 +387,7 @@ function SuccessState({
           style={{ background: "#E4F0EB", color: "#1F5C42" }}
         >
           <Check size={14} />
-          Verified Tenant badge applied
+          Document verification pending manual review
         </motion.div>
       )}
 
@@ -464,7 +464,6 @@ export default function ReviewForm() {
   const [confirmChecked, setConfirmChecked] = useState(false);
   const [verifyMethod, setVerifyMethod] = useState<VerifyMethod>(null);
   const [verifyEmail, setVerifyEmail] = useState("");
-  const [docFile, setDocFile] = useState<File | null>(null);
 
   // Submission
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -645,18 +644,6 @@ export default function ReviewForm() {
       const landlordId =
         selectedProperty.type === "landlord" ? selectedProperty.id : undefined;
 
-      // ── Document: encode to base64 for transport ───────────────────────────
-      let document_base64: string | undefined;
-      let document_mime: string | undefined;
-      let document_filename: string | undefined;
-
-      if (verifyMethod === "document" && docFile) {
-        const buf = await docFile.arrayBuffer();
-        document_base64 = Buffer.from(buf).toString("base64");
-        document_mime = docFile.type;
-        document_filename = docFile.name;
-      }
-
       // Minimum 1.5 s loading UX
       await new Promise((r) => setTimeout(r, 1500));
 
@@ -695,9 +682,6 @@ export default function ReviewForm() {
           flat_size_sqft:        flatSize ? Number(flatSize) : undefined,
           verification_method:   verifyMethod,
           verification_email:    verifyEmail || undefined,
-          document_base64,
-          document_mime,
-          document_filename,
         }),
       });
 
@@ -797,7 +781,6 @@ export default function ReviewForm() {
     setConfirmChecked(false);
     setVerifyMethod(null);
     setVerifyEmail("");
-    setDocFile(null);
     setSubmitted(false);
   }
 
@@ -841,7 +824,7 @@ export default function ReviewForm() {
         <div className="max-w-xl mx-auto px-4 py-12">
           <SuccessState
             selectedProperty={selectedProperty}
-            docVerified={verifyMethod === "document" && docFile !== null}
+            docVerified={verifyMethod === "document"}
             onReset={resetForm}
           />
         </div>
@@ -1961,12 +1944,12 @@ export default function ReviewForm() {
                                 className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                                 style={{ background: "#E4F0EB", color: "#1F5C42" }}
                               >
-                                ✓ Verified Tenant badge
+                                Manual verification
                               </span>
                             </div>
                             <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
-                              Utility bill, bank statement, or tenancy agreement. Deleted after
-                              verification.
+                              After submitting, email your tenancy proof to joe@rentradar.co for
+                              manual verification.
                             </p>
                           </div>
                           {verifyMethod === "document" && (
@@ -1980,31 +1963,18 @@ export default function ReviewForm() {
                             transition={{ duration: 0.25, ease: EASE }}
                             className="mt-3 overflow-hidden"
                           >
-                            <label
-                              className="flex flex-col items-center gap-2 p-5 rounded-[10px] cursor-pointer transition-colors"
+                            <div
+                              className="p-4 rounded-[10px]"
                               style={{
-                                border: "1.5px dashed #B0D4C3",
+                                border: "1.5px solid #B0D4C3",
                                 background: "#F5F0E8",
                               }}
-                              onClick={(e) => e.stopPropagation()}
                             >
-                              <Upload size={20} style={{ color: "#4D8B6F" }} />
-                              <span className="text-xs text-center" style={{ color: "#4D8B6F" }}>
-                                {docFile
-                                  ? docFile.name
-                                  : "Click to upload — PDF, JPG, PNG · max 5MB"}
-                              </span>
-                              <input
-                                type="file"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const f = e.target.files?.[0];
-                                  if (f && f.size <= 5 * 1024 * 1024) setDocFile(f);
-                                  else if (f) setToast("File must be under 5MB");
-                                }}
-                              />
-                            </label>
+                              <p className="text-xs leading-relaxed" style={{ color: "#4D8B6F" }}>
+                                Send your document (utility bill, bank statement, or tenancy agreement)
+                                to <strong>joe@rentradar.co</strong> from the same email you use here.
+                              </p>
+                            </div>
                           </motion.div>
                         )}
                       </button>
