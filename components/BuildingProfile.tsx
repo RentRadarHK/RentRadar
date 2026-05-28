@@ -371,30 +371,28 @@ export default function BuildingProfile({
             {activeTab === "overview" && (<>
 
             {/* ── AI Description ── */}
-            {building.description && (
-              <motion.div {...cardFade(0.02)}>
-                <div style={{ marginBottom: "2rem" }}>
-                  <p style={{
-                    fontSize: "11px",
-                    fontWeight: 500,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "#9CA3AF",
-                    marginBottom: "12px",
-                  }}>
-                    About this building
-                  </p>
-                  <div style={{
-                    fontSize: "15px",
-                    color: "#6B7280",
-                    lineHeight: "1.7",
-                    whiteSpace: "pre-line",
-                  }}>
-                    {building.description}
-                  </div>
+            <motion.div {...cardFade(0.02)}>
+              <div style={{ marginBottom: "2rem" }}>
+                <p style={{
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "#9CA3AF",
+                  marginBottom: "12px",
+                }}>
+                  About this building
+                </p>
+                <div style={{
+                  fontSize: "15px",
+                  color: "#6B7280",
+                  lineHeight: "1.7",
+                  whiteSpace: "pre-line",
+                }}>
+                  {building.description || "Detailed building profile coming soon."}
                 </div>
-              </motion.div>
-            )}
+              </div>
+            </motion.div>
 
             {/* ── Statutory Orders Card ── */}
             <motion.div

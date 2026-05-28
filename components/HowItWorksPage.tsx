@@ -166,8 +166,8 @@ export default function HowItWorksPage() {
     },
     {
       icon: Shield,
-      title: "Check government data",
-      desc: "Every building profile shows official data from the Buildings Department HKSAR — age, occupation permit status, and any outstanding statutory orders.",
+      title: "Know the building before you visit",
+      desc: "Every building on RentRadar has a detailed profile — neighbourhood character, transport links, what to expect as a tenant, and who typically lives there. Written in plain English, not government jargon.",
     },
     {
       icon: Star,

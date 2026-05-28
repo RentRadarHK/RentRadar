@@ -38,8 +38,8 @@ export default function AboutPage() {
   const whatCards = [
     {
       icon: Shield,
-      title: "Government data",
-      desc: "We pull official building data from the Buildings Department HKSAR — age, permits, statutory orders — and make it searchable for the first time in one place.",
+      title: "Detailed building profiles",
+      desc: "Every building in our database has a detailed profile covering the building itself, the neighbourhood, transport, amenities, and what tenants should know before signing. Over 6,600 buildings across Hong Kong Island — with Kowloon coming soon.",
     },
     {
       icon: Star,
@@ -159,6 +159,14 @@ export default function AboutPage() {
           >
             Three things that make the difference
           </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }} animate={whatInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.45, delay: 0.1 }}
+            className="text-[15px] leading-relaxed max-w-3xl mb-10"
+            style={{ color: "#6B7280" }}
+          >
+            Every building in our database has a detailed profile covering the building itself, the neighbourhood, transport, amenities, and what tenants should know before signing. Over 6,600 buildings across Hong Kong Island — with Kowloon coming soon.
+          </motion.p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {whatCards.map(({ icon: Icon, title, desc }, i) => (
               <motion.div
@@ -263,7 +271,7 @@ export default function AboutPage() {
             Ready to search your landlord?
           </h2>
           <p className="text-white/70 mb-8 leading-relaxed">
-            6,611+ HK Island buildings, verified government data, and honest tenant reviews.
+            6,611+ HK Island buildings with detailed profiles, verified tenant reviews, and official records as supporting context.
           </p>
           <Link
             href="/search"
