@@ -96,6 +96,7 @@ interface ReviewRow {
   // Guided review fields
   building_day_to_day: string | null;
   building_issues: string | null;
+  landlord_name: string | null;
   landlord_experience: string | null;
   landlord_deposit: string | null;
   landlord_rent_again: string | null;
@@ -224,6 +225,7 @@ function mapReview(row: ReviewRow): Review {
     unitNumber: row.unit_number ?? undefined,
     buildingDayToDay: row.building_day_to_day ?? undefined,
     buildingIssues: row.building_issues ?? undefined,
+    landlordName: row.landlord_name ?? undefined,
     landlordExperience: row.landlord_experience ?? undefined,
     landlordDeposit: row.landlord_deposit ?? undefined,
     landlordRentAgain: row.landlord_rent_again ?? undefined,

@@ -89,6 +89,7 @@ export interface Review {
   unitNumber?: string;
   buildingDayToDay?: string;
   buildingIssues?: string;
+  landlordName?: string;
   landlordExperience?: string;
   landlordDeposit?: string;
   landlordRentAgain?: string;

@@ -21,6 +21,7 @@ import {
   Hash,
   Lock,
   PenLine,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { Building, Landlord, Review } from "@/lib/data/types";
@@ -102,6 +103,65 @@ function filterReviews(list: Review[], filter: ReviewFilter): Review[] {
     default:
       return list;
   }
+}
+
+type ReviewSection = "building" | "landlord";
+
+function formatUnitLabel(review: Review): string | null {
+  const parts = [
+    review.unitType === "studio"
+      ? "Studio"
+      : review.unitType === "1bed"
+        ? "1 bed"
+        : review.unitType === "2bed"
+          ? "2 bed"
+          : review.unitType === "3bed"
+            ? "3 bed"
+            : review.unitType === "4bed+"
+              ? "4 bed+"
+              : review.unitType,
+    review.floorNumber,
+    review.unitNumber ? `Unit ${review.unitNumber}` : undefined,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+function resolveLandlordForReview(
+  review: Review,
+  linkedLandlords: Landlord[]
+): { id?: string; name: string } | null {
+  if (review.landlordId) {
+    const linked = linkedLandlords.find((l) => l.id === review.landlordId);
+    return {
+      id: review.landlordId,
+      name: linked?.name ?? review.landlordName ?? "Landlord",
+    };
+  }
+  if (review.landlordName) {
+    return { name: review.landlordName };
+  }
+  return null;
+}
+
+function buildingScores(review: Review) {
+  return [
+    { label: "Maintenance", score: review.dimensions.maintenance },
+    { label: "Cleanliness", score: review.dimensions.cleanliness },
+    { label: "Pest control", score: review.dimensions.pestControl },
+    { label: "Noise", score: review.dimensions.noise },
+    { label: "Facilities", score: review.dimensions.facilities },
+    { label: "Building management", score: review.dimensions.buildingMgmt },
+  ].filter((s) => s.score > 0);
+}
+
+function landlordScores(review: Review) {
+  return [
+    { label: "Deposit", score: review.dimensions.depositReturn },
+    { label: "Listing accuracy", score: review.dimensions.listingAccuracy },
+    { label: "Responsive", score: review.dimensions.landlordResponsiveness },
+    { label: "Flat repairs", score: review.dimensions.flatRepairs },
+    { label: "Rent again", score: review.dimensions.wouldRentAgain },
+  ].filter((s) => s.score > 0);
 }
 
 function CorrectionForm({ buildingId, buildingName }: { buildingId: string; buildingName: string }) {
@@ -189,6 +249,7 @@ export default function BuildingProfile({
   linkedLandlords: propLandlords,
 }: BuildingProfileProps) {
   const [activeFilter, setActiveFilter] = useState<ReviewFilter>("All");
+  const [reviewSection, setReviewSection] = useState<Record<string, ReviewSection>>({});
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"overview" | "price-guide">("overview");
   const [showOfficialRecords, setShowOfficialRecords] = useState(false);
@@ -623,7 +684,14 @@ export default function BuildingProfile({
                       : "No reviews match this filter."}
                   </p>
                 )}
-                {visibleReviews.slice(0, 1).map((review, i) => (
+                {visibleReviews.slice(0, 1).map((review, i) => {
+                  const section = reviewSection[review.id] ?? "building";
+                  const expandKey = `${review.id}-${section}`;
+                  const landlord = resolveLandlordForReview(review, linkedLandlords);
+                  const scores =
+                    section === "building" ? buildingScores(review) : landlordScores(review);
+
+                  return (
                   <motion.div
                     key={review.id}
                     initial={{ opacity: 0, y: 14 }}
@@ -637,71 +705,134 @@ export default function BuildingProfile({
                       <h3 className="font-bold text-[#555555] mt-2 text-[15px] leading-snug">
                         {review.headline}
                       </h3>
-                      {(review.unitType || review.floorNumber || review.unitNumber) && (
+                      {formatUnitLabel(review) && (
                         <p className="text-xs mt-1.5" style={{ color: "#9CA3AF" }}>
-                          {[
-                            review.unitType === "studio" ? "Studio"
-                              : review.unitType === "1bed" ? "1 bed"
-                              : review.unitType === "2bed" ? "2 bed"
-                              : review.unitType === "3bed" ? "3 bed"
-                              : review.unitType === "4bed+" ? "4 bed+"
-                              : review.unitType,
-                            review.floorNumber,
-                            review.unitNumber ? `Unit ${review.unitNumber}` : undefined,
-                          ].filter(Boolean).join(" · ")}
+                          {formatUnitLabel(review)}
                         </p>
                       )}
                     </div>
 
+                    <div className="flex gap-2 mb-4">
+                      {(["building", "landlord"] as const).map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() =>
+                            setReviewSection((prev) => ({ ...prev, [review.id]: tab }))
+                          }
+                          className="text-xs sm:text-sm font-semibold px-4 py-2 rounded-full transition-all duration-150"
+                          style={
+                            section === tab
+                              ? { background: "#555555", color: "#fff" }
+                              : { background: "#F5F0E8", color: "#6B7280", border: "1px solid #E2D9CE" }
+                          }
+                        >
+                          {tab === "building" ? "Building review" : "Landlord review"}
+                        </button>
+                      ))}
+                    </div>
+
+                    {section === "landlord" && landlord && (
+                      <div
+                        className="flex items-center justify-between gap-3 mb-4 p-3 rounded-xl"
+                        style={{ background: "#F5F0E8" }}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <User size={14} style={{ color: "#9CA3AF" }} className="shrink-0" />
+                          <span className="text-sm font-semibold truncate" style={{ color: "#555555" }}>
+                            {landlord.name}
+                          </span>
+                        </div>
+                        {landlord.id && (
+                          <Link
+                            href={`/landlord/${landlord.id}`}
+                            className="text-xs font-semibold shrink-0 inline-flex items-center gap-1 transition-colors hover:underline"
+                            style={{ color: "#4D8B6F" }}
+                          >
+                            View profile
+                            <ArrowRight size={12} />
+                          </Link>
+                        )}
+                      </div>
+                    )}
+
                     <div
                       className="mb-1"
                       style={
-                        !expanded.has(review.id)
+                        !expanded.has(expandKey)
                           ? { maxHeight: "5.5rem", overflow: "hidden" }
                           : {}
                       }
                     >
-                      {review.buildingDayToDay || review.buildingIssues ? (
+                      {section === "building" ? (
+                        review.buildingDayToDay || review.buildingIssues ? (
+                          <>
+                            {review.buildingDayToDay && (
+                              <div className="mb-3">
+                                <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>
+                                  What was the building like day-to-day?
+                                </p>
+                                <p className="text-sm text-[#6B7280] leading-relaxed">{review.buildingDayToDay}</p>
+                              </div>
+                            )}
+                            {review.buildingIssues && (
+                              <div>
+                                <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>
+                                  Building issues
+                                </p>
+                                <p className="text-sm text-[#6B7280] leading-relaxed">{review.buildingIssues}</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-sm text-[#6B7280] leading-relaxed">{review.body}</p>
+                        )
+                      ) : review.landlordExperience || review.landlordDeposit || review.landlordRentAgain ? (
                         <>
-                          {review.buildingDayToDay && (
+                          {review.landlordExperience && (
                             <div className="mb-3">
-                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>What was the building like day-to-day?</p>
-                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.buildingDayToDay}</p>
+                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>
+                                How was the landlord to deal with?
+                              </p>
+                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.landlordExperience}</p>
                             </div>
                           )}
-                          {review.buildingIssues && (
+                          {review.landlordDeposit && (
+                            <div className="mb-3">
+                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>
+                                How was the deposit handled?
+                              </p>
+                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.landlordDeposit}</p>
+                            </div>
+                          )}
+                          {review.landlordRentAgain && (
                             <div>
-                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>Building issues</p>
-                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.buildingIssues}</p>
+                              <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>
+                                Would you rent from this landlord again?
+                              </p>
+                              <p className="text-sm text-[#6B7280] leading-relaxed">{review.landlordRentAgain}</p>
                             </div>
                           )}
                         </>
                       ) : (
-                        <p className="text-sm text-[#6B7280] leading-relaxed">{review.body}</p>
+                        <p className="text-sm text-[#6B7280] leading-relaxed">
+                          No landlord feedback in this review.
+                        </p>
                       )}
                     </div>
                     <button
-                      onClick={() => toggleExpand(review.id)}
+                      onClick={() => toggleExpand(expandKey)}
                       className="text-xs font-semibold mb-4 transition-colors"
                       style={{ color: "#4D8B6F" }}
                     >
-                      {expanded.has(review.id) ? "Show less" : "Read more"}
+                      {expanded.has(expandKey) ? "Show less" : "Read more"}
                     </button>
 
-                    {/* Compact score breakdown */}
-                    {(review.dimensions.maintenance > 0 || review.dimensions.depositReturn > 0) && (
+                    {scores.length > 0 && (
                       <div
                         className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4 pt-3"
                         style={{ borderTop: "1px solid #F5F0E8" }}
                       >
-                        {[
-                          { label: "Maintenance",  score: review.dimensions.maintenance },
-                          { label: "Deposit",      score: review.dimensions.depositReturn },
-                          { label: "Cleanliness",  score: review.dimensions.cleanliness },
-                          { label: "Responsive",   score: review.dimensions.landlordResponsiveness },
-                          { label: "Pest control", score: review.dimensions.pestControl },
-                          { label: "Rent again",   score: review.dimensions.wouldRentAgain },
-                        ].filter((s) => s.score > 0).map(({ label, score }) => (
+                        {scores.map(({ label, score }) => (
                           <div key={label} className="flex items-center justify-between gap-2">
                             <span className="text-[11px]" style={{ color: "#9CA3AF" }}>{label}</span>
                             <div className="flex items-center gap-1">
@@ -745,8 +876,8 @@ export default function BuildingProfile({
                       </div>
                     </div>
 
-                    {/* Landlord response */}
-                    {review.response?.status === "approved" && (
+                    {/* Landlord response — shown on landlord tab */}
+                    {section === "landlord" && review.response?.status === "approved" && (
                       <div
                         className="mt-4 pl-4 py-3 pr-3 rounded-r-[10px]"
                         style={{ borderLeft: "3px solid #4D8B6F", background: "#F5F0E8" }}
@@ -772,7 +903,8 @@ export default function BuildingProfile({
                       </div>
                     )}
                   </motion.div>
-                ))}
+                  );
+                })}
 
                 {/* Subscription gate */}
                 {reviewCount > 1 && (
