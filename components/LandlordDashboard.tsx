@@ -76,7 +76,6 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
       depositReturn:        avg((r) => r.dimensions.depositReturn),
       responsiveness:       avg((r) => r.dimensions.landlordResponsiveness),
       listingAccuracy:      avg((r) => r.dimensions.listingAccuracy),
-      flatRepairs:          avg((r) => r.dimensions.flatRepairs),
       wouldRentAgain:       avg((r) => r.dimensions.wouldRentAgain),
     };
   }, [reviews]);
@@ -515,7 +514,6 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                   { label: "Deposit return",   score: stats.depositReturn },
                   { label: "Responsiveness",   score: stats.responsiveness },
                   { label: "Listing accuracy", score: stats.listingAccuracy },
-                  { label: "Flat repairs",     score: stats.flatRepairs },
                   { label: "Would rent again", score: stats.wouldRentAgain },
                 ].filter((s) => s.score > 0).map(({ label, score }) => (
                   <div key={label} className="flex items-center gap-4">

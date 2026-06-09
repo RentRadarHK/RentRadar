@@ -83,11 +83,16 @@ interface ReviewRow {
   rating_noise: number | null;
   rating_facilities: number | null;
   rating_building_mgmt: number | null;
+  // Flat ratings
+  rating_flat_condition: number | null;
+  rating_flat_cleanliness: number | null;
+  rating_flat_layout: number | null;
+  rating_flat_light: number | null;
+  rating_flat_repairs: number | null;
   // Landlord ratings
   rating_deposit_return: number | null;
   rating_listing_accuracy: number | null;
   rating_landlord_responsiveness: number | null;
-  rating_flat_repairs: number | null;
   rating_would_rent_again: number | null;
   // Unit info
   unit_type: string | null;
@@ -96,6 +101,8 @@ interface ReviewRow {
   // Guided review fields
   building_day_to_day: string | null;
   building_issues: string | null;
+  flat_day_to_day: string | null;
+  flat_issues: string | null;
   landlord_name: string | null;
   landlord_experience: string | null;
   landlord_deposit: string | null;
@@ -225,6 +232,8 @@ function mapReview(row: ReviewRow): Review {
     unitNumber: row.unit_number ?? undefined,
     buildingDayToDay: row.building_day_to_day ?? undefined,
     buildingIssues: row.building_issues ?? undefined,
+    flatDayToDay: row.flat_day_to_day ?? undefined,
+    flatIssues: row.flat_issues ?? undefined,
     landlordName: row.landlord_name ?? undefined,
     landlordExperience: row.landlord_experience ?? undefined,
     landlordDeposit: row.landlord_deposit ?? undefined,
@@ -240,10 +249,14 @@ function mapReview(row: ReviewRow): Review {
       noise:                    row.rating_noise ?? 0,
       facilities:               row.rating_facilities ?? 0,
       buildingMgmt:             row.rating_building_mgmt ?? 0,
+      flatCondition:            row.rating_flat_condition ?? 0,
+      flatCleanliness:          row.rating_flat_cleanliness ?? 0,
+      flatLayout:               row.rating_flat_layout ?? 0,
+      flatLight:                row.rating_flat_light ?? 0,
+      flatRepairs:              row.rating_flat_repairs ?? 0,
       depositReturn:            row.rating_deposit_return ?? 0,
       listingAccuracy:          row.rating_listing_accuracy ?? 0,
       landlordResponsiveness:   row.rating_landlord_responsiveness ?? 0,
-      flatRepairs:              row.rating_flat_repairs ?? 0,
       wouldRentAgain:           row.rating_would_rent_again ?? 0,
     },
   };

@@ -89,6 +89,8 @@ export interface Review {
   unitNumber?: string;
   buildingDayToDay?: string;
   buildingIssues?: string;
+  flatDayToDay?: string;
+  flatIssues?: string;
   landlordName?: string;
   landlordExperience?: string;
   landlordDeposit?: string;
@@ -106,11 +108,16 @@ export interface Review {
     noise: number;
     facilities: number;
     buildingMgmt: number;
+    // Flat ratings
+    flatCondition: number;
+    flatCleanliness: number;
+    flatLayout: number;
+    flatLight: number;
+    flatRepairs: number;
     // Landlord ratings
     depositReturn: number;
     listingAccuracy: number;
     landlordResponsiveness: number;
-    flatRepairs: number;
     wouldRentAgain: number;
   };
 }

@@ -447,16 +447,23 @@ export default function ReviewForm() {
   const [ratingNoise, setRatingNoise] = useState(0);
   const [ratingFacilities, setRatingFacilities] = useState(0);
   const [ratingBuildingMgmt, setRatingBuildingMgmt] = useState(0);
+  // Flat ratings
+  const [ratingFlatCondition, setRatingFlatCondition] = useState(0);
+  const [ratingFlatCleanliness, setRatingFlatCleanliness] = useState(0);
+  const [ratingFlatLayout, setRatingFlatLayout] = useState(0);
+  const [ratingFlatLight, setRatingFlatLight] = useState(0);
+  const [ratingFlatRepairs, setRatingFlatRepairs] = useState(0);
   // Landlord ratings
   const [ratingDepositReturn, setRatingDepositReturn] = useState(0);
   const [ratingListingAccuracy, setRatingListingAccuracy] = useState(0);
   const [ratingLandlordResponsiveness, setRatingLandlordResponsiveness] = useState(0);
-  const [ratingFlatRepairs, setRatingFlatRepairs] = useState(0);
   const [ratingWouldRentAgain, setRatingWouldRentAgain] = useState(0);
 
   // Step 4 — guided review + verify
   const [buildingDayToDay, setBuildingDayToDay] = useState("");
   const [buildingIssues, setBuildingIssues] = useState("");
+  const [flatDayToDay, setFlatDayToDay] = useState("");
+  const [flatIssues, setFlatIssues] = useState("");
   const [landlordExperience, setLandlordExperience] = useState("");
   const [landlordDeposit, setLandlordDeposit] = useState("");
   const [landlordRentAgain, setLandlordRentAgain] = useState("");
@@ -574,13 +581,19 @@ export default function ReviewForm() {
       if (draft.ratingNoise) setRatingNoise(draft.ratingNoise);
       if (draft.ratingFacilities) setRatingFacilities(draft.ratingFacilities);
       if (draft.ratingBuildingMgmt) setRatingBuildingMgmt(draft.ratingBuildingMgmt);
+      if (draft.ratingFlatCondition) setRatingFlatCondition(draft.ratingFlatCondition);
+      if (draft.ratingFlatCleanliness) setRatingFlatCleanliness(draft.ratingFlatCleanliness);
+      if (draft.ratingFlatLayout) setRatingFlatLayout(draft.ratingFlatLayout);
+      if (draft.ratingFlatLight) setRatingFlatLight(draft.ratingFlatLight);
+      if (draft.ratingFlatRepairs) setRatingFlatRepairs(draft.ratingFlatRepairs);
       if (draft.ratingDepositReturn) setRatingDepositReturn(draft.ratingDepositReturn);
       if (draft.ratingListingAccuracy) setRatingListingAccuracy(draft.ratingListingAccuracy);
       if (draft.ratingLandlordResponsiveness) setRatingLandlordResponsiveness(draft.ratingLandlordResponsiveness);
-      if (draft.ratingFlatRepairs) setRatingFlatRepairs(draft.ratingFlatRepairs);
       if (draft.ratingWouldRentAgain) setRatingWouldRentAgain(draft.ratingWouldRentAgain);
       if (draft.buildingDayToDay) setBuildingDayToDay(draft.buildingDayToDay);
       if (draft.buildingIssues) setBuildingIssues(draft.buildingIssues);
+      if (draft.flatDayToDay) setFlatDayToDay(draft.flatDayToDay);
+      if (draft.flatIssues) setFlatIssues(draft.flatIssues);
       if (draft.landlordExperience) setLandlordExperience(draft.landlordExperience);
       if (draft.landlordDeposit) setLandlordDeposit(draft.landlordDeposit);
       if (draft.landlordRentAgain) setLandlordRentAgain(draft.landlordRentAgain);
@@ -673,13 +686,19 @@ export default function ReviewForm() {
           rating_noise:                     ratingNoise,
           rating_facilities:                ratingFacilities,
           rating_building_mgmt:             ratingBuildingMgmt,
+          rating_flat_condition:            ratingFlatCondition,
+          rating_flat_cleanliness:          ratingFlatCleanliness,
+          rating_flat_layout:               ratingFlatLayout,
+          rating_flat_light:                ratingFlatLight,
+          rating_flat_repairs:              ratingFlatRepairs,
           rating_deposit_return:            ratingDepositReturn,
           rating_listing_accuracy:          ratingListingAccuracy,
           rating_landlord_responsiveness:   ratingLandlordResponsiveness,
-          rating_flat_repairs:              ratingFlatRepairs,
           rating_would_rent_again:          ratingWouldRentAgain,
           building_day_to_day:   buildingDayToDay || undefined,
           building_issues:       buildingIssues || undefined,
+          flat_day_to_day:       flatDayToDay || undefined,
+          flat_issues:           flatIssues || undefined,
           landlord_experience:   landlordExperience || undefined,
           landlord_deposit:      landlordDeposit || undefined,
           landlord_rent_again:   landlordRentAgain || undefined,
@@ -732,13 +751,19 @@ export default function ReviewForm() {
       ratingNoise,
       ratingFacilities,
       ratingBuildingMgmt,
+      ratingFlatCondition,
+      ratingFlatCleanliness,
+      ratingFlatLayout,
+      ratingFlatLight,
+      ratingFlatRepairs,
       ratingDepositReturn,
       ratingListingAccuracy,
       ratingLandlordResponsiveness,
-      ratingFlatRepairs,
       ratingWouldRentAgain,
       buildingDayToDay,
       buildingIssues,
+      flatDayToDay,
+      flatIssues,
       landlordExperience,
       landlordDeposit,
       landlordRentAgain,
@@ -778,13 +803,19 @@ export default function ReviewForm() {
     setRatingNoise(0);
     setRatingFacilities(0);
     setRatingBuildingMgmt(0);
+    setRatingFlatCondition(0);
+    setRatingFlatCleanliness(0);
+    setRatingFlatLayout(0);
+    setRatingFlatLight(0);
+    setRatingFlatRepairs(0);
     setRatingDepositReturn(0);
     setRatingListingAccuracy(0);
     setRatingLandlordResponsiveness(0);
-    setRatingFlatRepairs(0);
     setRatingWouldRentAgain(0);
     setBuildingDayToDay("");
     setBuildingIssues("");
+    setFlatDayToDay("");
+    setFlatIssues("");
     setLandlordExperience("");
     setLandlordDeposit("");
     setLandlordRentAgain("");
@@ -814,15 +845,21 @@ export default function ReviewForm() {
     ratingNoise > 0 &&
     ratingFacilities > 0 &&
     ratingBuildingMgmt > 0 &&
+    ratingFlatCondition > 0 &&
+    ratingFlatCleanliness > 0 &&
+    ratingFlatLayout > 0 &&
+    ratingFlatLight > 0 &&
+    ratingFlatRepairs > 0 &&
     ratingDepositReturn > 0 &&
     ratingListingAccuracy > 0 &&
     ratingLandlordResponsiveness > 0 &&
-    ratingFlatRepairs > 0 &&
     ratingWouldRentAgain > 0;
   const buildingAnswered = wc(buildingDayToDay) >= 15 || wc(buildingIssues) >= 5;
+  const flatAnswered = wc(flatDayToDay) >= 15 || wc(flatIssues) >= 5;
   const landlordAnswered = wc(landlordExperience) >= 15 || wc(landlordDeposit) >= 5 || wc(landlordRentAgain) >= 5;
   const step4Valid =
     buildingAnswered &&
+    flatAnswered &&
     landlordAnswered &&
     confirmChecked &&
     verifyMethod !== null &&
@@ -1417,7 +1454,50 @@ export default function ReviewForm() {
                     {/* Divider */}
                     <div className="mb-6" style={{ borderTop: "1px solid #E2D9CE" }} />
 
-                    {/* Section B — Landlord ratings */}
+                    {/* Section B — Flat ratings */}
+                    <div className="mb-6">
+                      <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "#555555" }}>
+                        Rate the flat
+                      </p>
+                      <p className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
+                        How was the apartment itself — not the building common areas?
+                      </p>
+                      <div className="flex flex-col gap-4">
+                        {(
+                          [
+                            { label: "Overall quality of unit",    value: ratingFlatCondition,   onChange: setRatingFlatCondition },
+                            { label: "Cleanliness inside the unit", value: ratingFlatCleanliness, onChange: setRatingFlatCleanliness },
+                            { label: "Layout & usable space",      value: ratingFlatLayout,      onChange: setRatingFlatLayout },
+                            { label: "Natural light & ventilation", value: ratingFlatLight,      onChange: setRatingFlatLight },
+                            { label: "In-unit maintenance & repairs", value: ratingFlatRepairs, onChange: setRatingFlatRepairs },
+                          ] as { label: string; value: number; onChange: (v: number) => void }[]
+                        ).map(({ label, value, onChange }) => (
+                          <div key={label} className="flex items-center gap-3">
+                            <span className="text-sm flex-1 min-w-0" style={{ color: "#6B7280" }}>{label}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <StarPicker value={value} onChange={onChange} size={22} />
+                              {value > 0 && (
+                                <motion.span
+                                  key={value}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="text-xs font-bold w-7 text-right"
+                                  style={{ color: "#4D8B6F" }}
+                                >
+                                  {value}/5
+                                </motion.span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="mb-6" style={{ borderTop: "1px solid #E2D9CE" }} />
+
+                    {/* Section C — Landlord ratings */}
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "#555555" }}>
                         Rate your landlord
@@ -1431,7 +1511,6 @@ export default function ReviewForm() {
                             { label: "Deposit return",         value: ratingDepositReturn,          onChange: setRatingDepositReturn },
                             { label: "Listing accuracy",       value: ratingListingAccuracy,         onChange: setRatingListingAccuracy },
                             { label: "Landlord responsiveness",value: ratingLandlordResponsiveness,  onChange: setRatingLandlordResponsiveness },
-                            { label: "Flat repairs & maintenance", value: ratingFlatRepairs,         onChange: setRatingFlatRepairs },
                             { label: "Would rent again",       value: ratingWouldRentAgain,          onChange: setRatingWouldRentAgain },
                           ] as { label: string; value: number; onChange: (v: number) => void }[]
                         ).map(({ label, value, onChange }) => (
@@ -1586,7 +1665,93 @@ export default function ReviewForm() {
                     </div>
                   </div>
 
-                  {/* Card B: About the landlord */}
+                  {/* Card B: About the flat */}
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="text-xl font-extrabold" style={{ color: "#555555" }}>
+                        About the flat
+                      </h2>
+                      <span
+                        className="px-2 py-0.5 rounded-full font-semibold shrink-0 ml-3"
+                        style={{ background: "#E4F0EB", color: "#1F5C42", fontSize: "11px" }}
+                      >
+                        Appears on building profile
+                      </span>
+                    </div>
+
+                    <div className="mb-5">
+                      <label className="text-sm font-semibold block mb-1" style={{ color: "#555555" }}>
+                        What was the flat like day-to-day?
+                      </label>
+                      <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                        Layout, appliances, storage, natural light, ventilation — what was it actually like living in the unit?
+                      </p>
+                      <textarea
+                        value={flatDayToDay}
+                        onChange={(e) => setFlatDayToDay(e.target.value)}
+                        rows={4}
+                        maxLength={2000}
+                        className="w-full px-4 py-3.5 rounded-[12px] text-sm resize-none outline-none transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1.5px solid #E2D9CE",
+                          color: "#555555",
+                          lineHeight: "1.6",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
+                      <div className="flex justify-end mt-1">
+                        <motion.span
+                          className="flex items-center gap-1.5 text-xs font-semibold"
+                          style={{ color: wc(flatDayToDay) >= 15 ? "#555555" : "#9CA3AF" }}
+                          animate={{ color: wc(flatDayToDay) >= 15 ? "#555555" : "#9CA3AF" }}
+                        >
+                          {wc(flatDayToDay) >= 15 && <Check size={12} />}
+                          {wc(flatDayToDay)} / 15 words minimum
+                        </motion.span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-semibold block mb-1" style={{ color: "#555555" }}>
+                        Describe any issues with the flat
+                      </label>
+                      <p className="text-xs mb-2" style={{ color: "#9CA3AF" }}>
+                        Damp, mould, broken fixtures, poor insulation — anything specific to the unit. Write &apos;No significant issues&apos; if none.
+                      </p>
+                      <textarea
+                        value={flatIssues}
+                        onChange={(e) => setFlatIssues(e.target.value)}
+                        rows={3}
+                        maxLength={2000}
+                        className="w-full px-4 py-3.5 rounded-[12px] text-sm resize-none outline-none transition-all"
+                        style={{
+                          background: "#F5F0E8",
+                          border: "1.5px solid #E2D9CE",
+                          color: "#555555",
+                          lineHeight: "1.6",
+                        }}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "#4D8B6F")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
+                      />
+                      <div className="flex justify-end mt-1">
+                        <motion.span
+                          className="flex items-center gap-1.5 text-xs font-semibold"
+                          style={{ color: wc(flatIssues) >= 5 ? "#555555" : "#9CA3AF" }}
+                          animate={{ color: wc(flatIssues) >= 5 ? "#555555" : "#9CA3AF" }}
+                        >
+                          {wc(flatIssues) >= 5 && <Check size={12} />}
+                          {wc(flatIssues)} / 5 words minimum
+                        </motion.span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card C: About the landlord */}
                   <div
                     className="bg-white rounded-[16px] p-6 sm:p-8"
                     style={{ border: "0.5px solid #E2D9CE" }}
@@ -1711,23 +1876,21 @@ export default function ReviewForm() {
 
                   {/* Minimum answers note */}
                   <p className="text-xs text-center px-2" style={{ color: "#6B7280" }}>
-                    Answer at least one building question and one landlord question to post your review.
+                    Answer at least one building, flat, and landlord question to post your review.
                   </p>
 
-                  {/* Card C: Verify identity */}
+                  {/* Card D: Rental figures */}
                   <div
                     className="bg-white rounded-[16px] p-6 sm:p-8"
                     style={{ border: "0.5px solid #E2D9CE" }}
                   >
                     <h2 className="text-lg font-extrabold mb-1" style={{ color: "#555555" }}>
-                      One last step — verify it&apos;s you
+                      Rental figures
                     </h2>
                     <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
-                      Your identity is never shown publicly.
+                      Optional — helps others compare value for similar units.
                     </p>
-
-                    {/* Optional fields */}
-                    <div className="flex gap-3 mb-2">
+                    <div className="flex gap-3">
                       <div className="flex-1">
                         <label className="text-xs font-semibold block mb-1.5" style={{ color: "#6B7280" }}>
                           Monthly rent paid (HKD)
@@ -1763,8 +1926,18 @@ export default function ReviewForm() {
                         />
                       </div>
                     </div>
-                    <p className="text-xs mb-5" style={{ color: "#9CA3AF" }}>
-                      Optional — helps others compare value
+                  </div>
+
+                  {/* Card E: Verify identity */}
+                  <div
+                    className="bg-white rounded-[16px] p-6 sm:p-8"
+                    style={{ border: "0.5px solid #E2D9CE" }}
+                  >
+                    <h2 className="text-lg font-extrabold mb-1" style={{ color: "#555555" }}>
+                      One last step — verify it&apos;s you
+                    </h2>
+                    <p className="text-sm mb-5" style={{ color: "#6B7280" }}>
+                      Your identity is never shown publicly.
                     </p>
 
                     {/* Confirm checkbox */}

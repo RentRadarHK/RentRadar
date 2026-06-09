@@ -19,10 +19,14 @@ interface SubmitBody {
   rating_noise?: number;
   rating_facilities?: number;
   rating_building_mgmt?: number;
+  rating_flat_condition?: number;
+  rating_flat_cleanliness?: number;
+  rating_flat_layout?: number;
+  rating_flat_light?: number;
+  rating_flat_repairs?: number;
   rating_deposit_return?: number;
   rating_listing_accuracy?: number;
   rating_landlord_responsiveness?: number;
-  rating_flat_repairs?: number;
   rating_would_rent_again?: number;
   unit_type?: string;
   floor_number?: string;
@@ -31,6 +35,8 @@ interface SubmitBody {
   review_text?: string;
   building_day_to_day?: string;
   building_issues?: string;
+  flat_day_to_day?: string;
+  flat_issues?: string;
   landlord_experience?: string;
   landlord_deposit?: string;
   landlord_rent_again?: string;
@@ -52,9 +58,12 @@ function validate(body: SubmitBody): string | null {
   if (!body.building_id && !body.landlord_id)
     return "building_id or landlord_id is required";
   const buildingOk = wc(body.building_day_to_day) >= 15 || wc(body.building_issues) >= 5;
+  const flatOk = wc(body.flat_day_to_day) >= 15 || wc(body.flat_issues) >= 5;
   const landlordOk = wc(body.landlord_experience) >= 15 || wc(body.landlord_deposit) >= 5 || wc(body.landlord_rent_again) >= 5;
   if (!buildingOk)
     return "Please answer at least one building question (minimum word count not met)";
+  if (!flatOk)
+    return "Please answer at least one flat question (minimum word count not met)";
   if (!landlordOk)
     return "Please answer at least one landlord question (minimum word count not met)";
   if (!body.rating_overall || body.rating_overall < 1 || body.rating_overall > 5)
@@ -138,6 +147,8 @@ export async function POST(req: NextRequest) {
   const generatedReviewText = [
     body.building_day_to_day,
     body.building_issues,
+    body.flat_day_to_day,
+    body.flat_issues,
     body.landlord_experience,
     body.landlord_deposit,
     body.landlord_rent_again,
@@ -161,14 +172,20 @@ export async function POST(req: NextRequest) {
     rating_noise:                   body.rating_noise ?? null,
     rating_facilities:              body.rating_facilities ?? null,
     rating_building_mgmt:           body.rating_building_mgmt ?? null,
+    rating_flat_condition:          body.rating_flat_condition ?? null,
+    rating_flat_cleanliness:        body.rating_flat_cleanliness ?? null,
+    rating_flat_layout:             body.rating_flat_layout ?? null,
+    rating_flat_light:              body.rating_flat_light ?? null,
+    rating_flat_repairs:            body.rating_flat_repairs ?? null,
     rating_deposit_return:          body.rating_deposit_return ?? null,
     rating_listing_accuracy:        body.rating_listing_accuracy ?? null,
     rating_landlord_responsiveness: body.rating_landlord_responsiveness ?? null,
-    rating_flat_repairs:            body.rating_flat_repairs ?? null,
     rating_would_rent_again:        body.rating_would_rent_again ?? null,
     review_text:           generatedReviewText,
     building_day_to_day:   body.building_day_to_day ?? null,
     building_issues:       body.building_issues ?? null,
+    flat_day_to_day:       body.flat_day_to_day ?? null,
+    flat_issues:           body.flat_issues ?? null,
     landlord_experience:   body.landlord_experience ?? null,
     landlord_deposit:      body.landlord_deposit ?? null,
     landlord_rent_again:   body.landlord_rent_again ?? null,
@@ -256,6 +273,8 @@ export async function POST(req: NextRequest) {
       landlordName:                   body.landlord_name,
       buildingDayToDay:               body.building_day_to_day,
       buildingIssues:                 body.building_issues,
+      flatDayToDay:                   body.flat_day_to_day,
+      flatIssues:                     body.flat_issues,
       landlordExperience:             body.landlord_experience,
       landlordDeposit:                body.landlord_deposit,
       landlordRentAgain:              body.landlord_rent_again,
@@ -266,10 +285,14 @@ export async function POST(req: NextRequest) {
       ratingNoise:                    body.rating_noise,
       ratingFacilities:               body.rating_facilities,
       ratingBuildingMgmt:             body.rating_building_mgmt,
+      ratingFlatCondition:            body.rating_flat_condition,
+      ratingFlatCleanliness:          body.rating_flat_cleanliness,
+      ratingFlatLayout:               body.rating_flat_layout,
+      ratingFlatLight:                body.rating_flat_light,
+      ratingFlatRepairs:              body.rating_flat_repairs,
       ratingDepositReturn:            body.rating_deposit_return,
       ratingListingAccuracy:          body.rating_listing_accuracy,
       ratingLandlordResponsiveness:   body.rating_landlord_responsiveness,
-      ratingFlatRepairs:              body.rating_flat_repairs,
       ratingWouldRentAgain:           body.rating_would_rent_again,
       tenancyFrom:                    body.tenancy_from,
       tenancyTo:                      body.tenancy_to,

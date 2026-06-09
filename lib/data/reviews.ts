@@ -16,10 +16,14 @@ function dims(
     noise: 3,
     facilities: 3,
     buildingMgmt: 3,
+    flatCondition: 3,
+    flatCleanliness: 3,
+    flatLayout: 3,
+    flatLight: 3,
+    flatRepairs,
     depositReturn,
     listingAccuracy,
     landlordResponsiveness,
-    flatRepairs,
     wouldRentAgain,
   };
 }

@@ -105,7 +105,7 @@ function filterReviews(list: Review[], filter: ReviewFilter): Review[] {
   }
 }
 
-type ReviewSection = "building" | "landlord";
+type ReviewSection = "building" | "flat" | "landlord";
 
 function formatUnitLabel(review: Review): string | null {
   const parts = [
@@ -154,12 +154,21 @@ function buildingScores(review: Review) {
   ].filter((s) => s.score > 0);
 }
 
+function flatScores(review: Review) {
+  return [
+    { label: "Overall quality of unit", score: review.dimensions.flatCondition },
+    { label: "Cleanliness", score: review.dimensions.flatCleanliness },
+    { label: "Layout & space", score: review.dimensions.flatLayout },
+    { label: "Natural light", score: review.dimensions.flatLight },
+    { label: "In-unit maintenance", score: review.dimensions.flatRepairs },
+  ].filter((s) => s.score > 0);
+}
+
 function landlordScores(review: Review) {
   return [
     { label: "Deposit", score: review.dimensions.depositReturn },
     { label: "Listing accuracy", score: review.dimensions.listingAccuracy },
     { label: "Responsive", score: review.dimensions.landlordResponsiveness },
-    { label: "Flat repairs", score: review.dimensions.flatRepairs },
     { label: "Rent again", score: review.dimensions.wouldRentAgain },
   ].filter((s) => s.score > 0);
 }
@@ -689,7 +698,11 @@ export default function BuildingProfile({
                   const expandKey = `${review.id}-${section}`;
                   const landlord = resolveLandlordForReview(review, linkedLandlords);
                   const scores =
-                    section === "building" ? buildingScores(review) : landlordScores(review);
+                    section === "building"
+                      ? buildingScores(review)
+                      : section === "flat"
+                        ? flatScores(review)
+                        : landlordScores(review);
 
                   return (
                   <motion.div
@@ -712,8 +725,8 @@ export default function BuildingProfile({
                       )}
                     </div>
 
-                    <div className="flex gap-2 mb-4">
-                      {(["building", "landlord"] as const).map((tab) => (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {(["building", "flat", "landlord"] as const).map((tab) => (
                         <button
                           key={tab}
                           onClick={() =>
@@ -726,7 +739,11 @@ export default function BuildingProfile({
                               : { background: "#F5F0E8", color: "#6B7280", border: "1px solid #E2D9CE" }
                           }
                         >
-                          {tab === "building" ? "Building review" : "Landlord review"}
+                          {tab === "building"
+                            ? "Building review"
+                            : tab === "flat"
+                              ? "Flat review"
+                              : "Landlord review"}
                         </button>
                       ))}
                     </div>
@@ -785,6 +802,31 @@ export default function BuildingProfile({
                           </>
                         ) : (
                           <p className="text-sm text-[#6B7280] leading-relaxed">{review.body}</p>
+                        )
+                      ) : section === "flat" ? (
+                        review.flatDayToDay || review.flatIssues ? (
+                          <>
+                            {review.flatDayToDay && (
+                              <div className="mb-3">
+                                <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>
+                                  What was the flat like day-to-day?
+                                </p>
+                                <p className="text-sm text-[#6B7280] leading-relaxed">{review.flatDayToDay}</p>
+                              </div>
+                            )}
+                            {review.flatIssues && (
+                              <div>
+                                <p className="text-[11px] font-semibold mb-0.5" style={{ color: "#9CA3AF" }}>
+                                  Flat issues
+                                </p>
+                                <p className="text-sm text-[#6B7280] leading-relaxed">{review.flatIssues}</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-sm text-[#6B7280] leading-relaxed">
+                            No flat feedback in this review.
+                          </p>
                         )
                       ) : review.landlordExperience || review.landlordDeposit || review.landlordRentAgain ? (
                         <>

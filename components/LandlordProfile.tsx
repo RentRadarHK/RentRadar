@@ -58,7 +58,7 @@ function deriveCategory(r: Review): string {
   if (r.rating >= 4) return "positive";
   if (r.rating <= 2) return "critical";
   if (r.dimensions.depositReturn > 0 && r.dimensions.depositReturn <= 2) return "deposit";
-  if (r.dimensions.flatRepairs > 0 && r.dimensions.flatRepairs <= 2) return "maintenance";
+  if (r.dimensions.landlordResponsiveness > 0 && r.dimensions.landlordResponsiveness <= 2) return "maintenance";
   const body = r.body.toLowerCase();
   if (body.includes("deposit")) return "deposit";
   if (body.includes("mainten") || body.includes("repair")) return "maintenance";
@@ -88,7 +88,7 @@ function computeRedFlags(rs: Review[]): { text: string; count: number }[] {
   const flags: { text: string; count: number }[] = [];
   const deposit = rs.filter((r) => r.dimensions.depositReturn <= 2).length;
   if (deposit > 0) flags.push({ text: "Deposit disputes reported", count: deposit });
-  const maint = rs.filter((r) => r.dimensions.flatRepairs <= 2).length;
+  const maint = rs.filter((r) => r.dimensions.landlordResponsiveness > 0 && r.dimensions.landlordResponsiveness <= 2).length;
   if (maint > 0) flags.push({ text: "Delayed maintenance response", count: maint });
   const listing = rs.filter((r) => r.dimensions.listingAccuracy <= 2).length;
   if (listing > 0) flags.push({ text: "Property condition below listing standard", count: listing });
@@ -231,7 +231,6 @@ export default function LandlordProfile({
         { label: "Deposit return",      score: avgDimension((r) => r.dimensions.depositReturn) },
         { label: "Listing accuracy",    score: avgDimension((r) => r.dimensions.listingAccuracy) },
         { label: "Responsiveness",      score: avgDimension((r) => r.dimensions.landlordResponsiveness) },
-        { label: "Flat repairs",        score: avgDimension((r) => r.dimensions.flatRepairs) },
         { label: "Would rent again",    score: avgDimension((r) => r.dimensions.wouldRentAgain) },
       ].filter((s) => s.score > 0)
     : landlordData

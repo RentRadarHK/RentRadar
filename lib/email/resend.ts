@@ -70,6 +70,8 @@ interface ModerationEmailParams {
   // Guided review answers
   buildingDayToDay?: string;
   buildingIssues?: string;
+  flatDayToDay?: string;
+  flatIssues?: string;
   landlordExperience?: string;
   landlordDeposit?: string;
   landlordRentAgain?: string;
@@ -81,11 +83,16 @@ interface ModerationEmailParams {
   ratingNoise?: number;
   ratingFacilities?: number;
   ratingBuildingMgmt?: number;
+  // Flat ratings
+  ratingFlatCondition?: number;
+  ratingFlatCleanliness?: number;
+  ratingFlatLayout?: number;
+  ratingFlatLight?: number;
+  ratingFlatRepairs?: number;
   // Landlord ratings
   ratingDepositReturn?: number;
   ratingListingAccuracy?: number;
   ratingLandlordResponsiveness?: number;
-  ratingFlatRepairs?: number;
   ratingWouldRentAgain?: number;
   tenancyFrom?: number;
   tenancyTo?: number;
@@ -167,13 +174,23 @@ export async function sendModerationEmail(params: ModerationEmailParams) {
           </tbody>
         </table>
 
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Flat ratings</p>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+          <tbody>
+            ${params.ratingFlatCondition ? row("Overall quality of unit", `${params.ratingFlatCondition}/5`) : ""}
+            ${params.ratingFlatCleanliness ? row("Cleanliness inside unit", `${params.ratingFlatCleanliness}/5`) : ""}
+            ${params.ratingFlatLayout ? row("Layout & space", `${params.ratingFlatLayout}/5`) : ""}
+            ${params.ratingFlatLight ? row("Natural light & ventilation", `${params.ratingFlatLight}/5`) : ""}
+            ${params.ratingFlatRepairs ? row("In-unit maintenance", `${params.ratingFlatRepairs}/5`) : ""}
+          </tbody>
+        </table>
+
         <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Landlord ratings</p>
         <table style="width:100%;border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:24px;">
           <tbody>
             ${params.ratingDepositReturn ? row("Deposit return", `${params.ratingDepositReturn}/5`) : ""}
             ${params.ratingListingAccuracy ? row("Listing accuracy", `${params.ratingListingAccuracy}/5`) : ""}
             ${params.ratingLandlordResponsiveness ? row("Responsiveness", `${params.ratingLandlordResponsiveness}/5`) : ""}
-            ${params.ratingFlatRepairs ? row("Flat repairs", `${params.ratingFlatRepairs}/5`) : ""}
             ${params.ratingWouldRentAgain ? row("Would rent again", `${params.ratingWouldRentAgain}/5`) : ""}
           </tbody>
         </table>
@@ -188,6 +205,20 @@ export async function sendModerationEmail(params: ModerationEmailParams) {
           ${params.buildingIssues ? `
           <p style="color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px;">Building issues</p>
           <p style="color:#374151;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${params.buildingIssues.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          ` : ""}
+        </div>
+        ` : ""}
+
+        ${params.flatDayToDay || params.flatIssues ? `
+        <p style="color:#555555;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px;">Flat review</p>
+        <div style="background:#F9FAFB;border-left:3px solid #4D8B6F;border-radius:4px;padding:16px 20px;margin-bottom:16px;">
+          ${params.flatDayToDay ? `
+          <p style="color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px;">What was the flat like day-to-day?</p>
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 12px;white-space:pre-wrap;">${params.flatDayToDay.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          ` : ""}
+          ${params.flatIssues ? `
+          <p style="color:#9CA3AF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px;">Flat issues</p>
+          <p style="color:#374151;font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap;">${params.flatIssues.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
           ` : ""}
         </div>
         ` : ""}
