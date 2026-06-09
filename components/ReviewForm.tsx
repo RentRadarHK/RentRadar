@@ -22,6 +22,7 @@ import {
 import Link from "next/link";
 import { SearchResult } from "@/lib/data/types";
 import { searchAll, getBuilding, getLandlord } from "@/lib/supabase/queries";
+import { setAuthReturnPath } from "@/lib/auth/return-path";
 import { useAuth } from "@/lib/context/AuthContext";
 import { createClient } from "@/lib/supabase/client";
 
@@ -587,14 +588,18 @@ export default function ReviewForm() {
       if (draft.flatSize) setFlatSize(draft.flatSize);
       if (draft.confirmChecked) setConfirmChecked(draft.confirmChecked);
       if (draft.verifyMethod) setVerifyMethod(draft.verifyMethod);
+      else setVerifyMethod("google");
       if (draft.verifyEmail) setVerifyEmail(draft.verifyEmail);
       setStep(4);
+      if (draft.verifyMethod === "google" || !draft.verifyMethod) {
+        setToast("Signed in with Google. You can now submit your review.");
+      }
     } catch {
       // malformed draft — ignore
     } finally {
       sessionStorage.removeItem(REVIEW_DRAFT_KEY);
     }
-  }, [user]);
+  }, [user, searchParams]);
 
   function selectProperty(r: SearchResult) {
     setSelectedProperty({
@@ -628,8 +633,8 @@ export default function ReviewForm() {
     try {
       // ── Google verification: trigger OAuth if not signed in ────────────────
       if (verifyMethod === "google" && !user) {
-        saveDraftState();
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        const returnPath = prepareGoogleAuth();
+        const next = encodeURIComponent(returnPath);
         const supabase = createClient();
         await supabase.auth.signInWithOAuth({
           provider: "google",
@@ -700,6 +705,13 @@ export default function ReviewForm() {
     }
   }
 
+  function prepareGoogleAuth() {
+    const returnPath = window.location.pathname + window.location.search;
+    setAuthReturnPath(returnPath);
+    saveDraftState();
+    return returnPath;
+  }
+
   function saveDraftState() {
     sessionStorage.setItem(REVIEW_DRAFT_KEY, JSON.stringify({
       buildingId: searchParams?.get("building"),
@@ -739,8 +751,8 @@ export default function ReviewForm() {
   }
 
   async function handleGoogleSignIn() {
-    saveDraftState();
-    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    const returnPath = prepareGoogleAuth();
+    const next = encodeURIComponent(returnPath);
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",

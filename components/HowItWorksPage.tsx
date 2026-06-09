@@ -35,7 +35,7 @@ function fadeUp(delay = 0) {
 const faqs = [
   {
     q: "Is RentRadar free to use?",
-    a: "Searching buildings and viewing government data is always free. Reading tenant reviews requires either submitting your own review first, or a small subscription.",
+    a: "Searching buildings, viewing building data, and reading tenant reviews are free.",
   },
   {
     q: "How do I know the reviews are real?",
