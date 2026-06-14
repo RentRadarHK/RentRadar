@@ -187,18 +187,26 @@ function mapReviewResponse(row: ReviewResponseRow): ReviewResponse {
   };
 }
 
-async function attachResponses(reviews: Review[]): Promise<Review[]> {
+async function attachResponses(
+  reviews: Review[],
+  statuses: Array<"approved" | "pending"> = ["approved"]
+): Promise<Review[]> {
   if (reviews.length === 0) return reviews;
   const ids = reviews.map((r) => r.id);
   const { data } = await supabase
     .from("review_responses")
     .select("*")
     .in("review_id", ids)
-    .eq("status", "approved");
+    .in("status", statuses);
   if (!data || data.length === 0) return reviews;
-  const byReview = new Map(
-    (data as ReviewResponseRow[]).map((r) => [r.review_id, mapReviewResponse(r)])
-  );
+  const byReview = new Map<string, ReviewResponse>();
+  for (const row of data as ReviewResponseRow[]) {
+    const mapped = mapReviewResponse(row);
+    const existing = byReview.get(row.review_id);
+    if (!existing || (existing.status !== "approved" && mapped.status === "approved")) {
+      byReview.set(row.review_id, mapped);
+    }
+  }
   return reviews.map((review) => ({
     ...review,
     response: byReview.get(review.id),
@@ -385,13 +393,23 @@ export async function getReviewsForBuilding(buildingId: string): Promise<Review[
 export async function getReviewsForLandlord(landlordId: string): Promise<Review[]> {
   const { data, error } = await supabase
     .from("reviews")
-    .select("*")
+    .select("*, buildings(name, address)")
     .eq("landlord_id", landlordId)
     .eq("status", "approved")
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
-  return attachResponses((data as ReviewRow[]).map(mapReview));
+  return attachResponses(
+    (data as (ReviewRow & { buildings?: { name: string; address: string } | null })[]).map((row) => {
+      const review = mapReview(row);
+      if (row.buildings) {
+        review.buildingName = row.buildings.name;
+        review.buildingAddress = row.buildings.address;
+      }
+      return review;
+    }),
+    ["approved", "pending"]
+  );
 }
 
 export async function getLandlordByUserId(userId: string): Promise<Landlord | null> {

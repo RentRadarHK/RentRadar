@@ -26,6 +26,9 @@ export async function POST(req: NextRequest) {
   if (!body.reviewId || !body.landlordId || !body.responseText?.trim()) {
     return NextResponse.json({ error: "reviewId, landlordId, and responseText are required" }, { status: 400 });
   }
+  if (body.responseText.trim().length > 500) {
+    return NextResponse.json({ error: "Response must be 500 characters or fewer" }, { status: 400 });
+  }
 
   // Verify auth
   const userClient = await createServerClient();

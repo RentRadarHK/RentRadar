@@ -36,9 +36,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "landlordId, fullName, and contactEmail are required" }, { status: 400 });
   }
 
+  const userClient = await createServerClient();
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "You must be signed in to submit a claim" }, { status: 401 });
+  }
+
   const supabase = serviceClient();
 
-  // Verify the landlord exists and isn't already claimed/pending
   const { data: landlord, error: landlordError } = await supabase
     .from("landlords")
     .select("id, name, claim_status")
@@ -57,14 +62,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "A claim is already pending for this profile" }, { status: 409 });
   }
 
-  // Get authenticated user (optional — can claim without being logged in)
-  const userClient = await createServerClient();
-  const { data: { user } } = await userClient.auth.getUser();
-
-  // Upload document if provided
   let documentUrl: string | null = null;
   if (body.documentBase64 && body.documentFilename) {
-    const userId = user?.id ?? "anon";
+    const userId = user.id;
     const claimId = crypto.randomUUID();
     const path = `${userId}/${claimId}/${body.documentFilename}`;
     const buffer = Buffer.from(body.documentBase64, "base64");
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     .from("landlord_claims")
     .insert({
       landlord_id:    body.landlordId,
-      user_id:        user?.id ?? null,
+      user_id:        user.id,
       full_name:      body.fullName,
       company_name:   body.companyName ?? null,
       contact_email:  body.contactEmail,

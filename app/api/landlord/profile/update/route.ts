@@ -27,6 +27,9 @@ export async function POST(req: NextRequest) {
   if (!body.landlordId) {
     return NextResponse.json({ error: "landlordId is required" }, { status: 400 });
   }
+  if (body.bio && body.bio.length > 500) {
+    return NextResponse.json({ error: "Bio must be 500 characters or fewer" }, { status: 400 });
+  }
 
   // Verify the authenticated user owns this landlord profile
   const userClient = await createServerClient();

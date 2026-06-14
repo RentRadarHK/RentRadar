@@ -1460,7 +1460,7 @@ export default function ReviewForm() {
                         Rate the flat
                       </p>
                       <p className="text-xs mb-4" style={{ color: "#9CA3AF" }}>
-                        How was the apartment itself — not the building common areas?
+                        How was the apartment itself?
                       </p>
                       <div className="flex flex-col gap-4">
                         {(

@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Radio, Shield, CheckCircle2, Upload, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/AuthContext";
+import { searchAll } from "@/lib/supabase/queries";
+import { setAuthReturnPath } from "@/lib/auth/return-path";
+import { createClient } from "@/lib/supabase/client";
+import type { SearchResult } from "@/lib/data/types";
 
 interface Props {
   landlordId: string;
@@ -19,8 +24,78 @@ const DOCUMENT_TYPES = [
   "Other ownership document",
 ];
 
-export default function LandlordClaimForm({ landlordId, landlordName, claimStatus }: Props) {
+export default function LandlordClaimForm({
+  landlordId: initialLandlordId,
+  landlordName: initialLandlordName,
+  claimStatus: initialClaimStatus,
+}: Props) {
   const { user } = useAuth();
+  const router = useRouter();
+
+  const [landlordId, setLandlordId] = useState(initialLandlordId);
+  const [landlordName, setLandlordName] = useState(initialLandlordName);
+  const [claimStatus, setClaimStatus] = useState(initialClaimStatus);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    setLandlordId(initialLandlordId);
+    setLandlordName(initialLandlordName);
+    setClaimStatus(initialClaimStatus);
+  }, [initialLandlordId, initialLandlordName, initialClaimStatus]);
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    let cancelled = false;
+    setSearching(true);
+    searchAll(searchQuery)
+      .then(({ landlords }) => {
+        if (cancelled) return;
+        setSearchResults(landlords.filter((l) => l.type === "landlord").slice(0, 8));
+      })
+      .finally(() => {
+        if (!cancelled) setSearching(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [searchQuery]);
+
+  function selectLandlord(result: SearchResult) {
+    setLandlordId(result.id);
+    setLandlordName(result.name);
+    setClaimStatus("unclaimed");
+    setSearchQuery("");
+    setSearchResults([]);
+    router.replace(`/landlord/claim?id=${result.id}`);
+  }
+
+  async function handleGoogleSignIn() {
+    setAuthReturnPath(window.location.pathname + window.location.search);
+    const supabase = createClient();
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${next}` },
+    });
+  }
+
+  async function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(",")[1] ?? "");
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState("");
@@ -37,29 +112,97 @@ export default function LandlordClaimForm({ landlordId, landlordName, claimStatu
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // No landlord ID — show guidance
+  // No landlord selected — show search
   if (!landlordId || !landlordName) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-5 pt-20" style={{ background: "#F5F0E8" }}>
-        <div
-          className="max-w-md w-full bg-white rounded-[20px] p-10 text-center"
-          style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.06)", border: "1px solid #E2D9CE" }}
-        >
-          <Shield size={40} style={{ color: "#4D8B6F" }} className="mx-auto mb-5" />
-          <h1 className="text-2xl font-bold mb-3" style={{ color: "#555555" }}>
-            Claim a landlord profile
-          </h1>
-          <p className="text-sm leading-relaxed mb-6" style={{ color: "#6B7280" }}>
-            To claim your profile, first find your listing on RentRadar and click
-            the <strong>&ldquo;Claim This Profile&rdquo;</strong> button.
-          </p>
-          <Link
-            href="/search"
-            className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-3 rounded-[12px] text-white transition-colors"
-            style={{ background: "#4D8B6F" }}
+      <div className="min-h-screen pt-16" style={{ background: "#F5F0E8" }}>
+        <div className="flex flex-col lg:flex-row min-h-[calc(100vh-64px)]">
+          <div
+            className="lg:w-[420px] lg:min-h-[calc(100vh-64px)] lg:sticky lg:top-16 flex flex-col justify-center px-10 py-14"
+            style={{ background: "#555555" }}
           >
-            Search your name →
-          </Link>
+            <div className="flex items-center gap-2 mb-12">
+              <Radio size={22} className="text-white" />
+              <span className="text-white font-bold text-xl tracking-tight">
+                Rent<span style={{ color: "#4D8B6F" }}>Radar</span>
+              </span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-white mb-3 leading-tight">
+              Claim your landlord profile
+            </h1>
+            <p className="text-sm mb-8" style={{ color: "#D1D5DB" }}>
+              Join verified landlords building trust with Hong Kong tenants.
+            </p>
+            <div className="flex flex-col gap-4 mb-10">
+              {[
+                "Respond publicly to tenant reviews",
+                "Build your verified reputation",
+                "Get discovered by quality tenants",
+              ].map((point) => (
+                <div key={point} className="flex items-start gap-3">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold"
+                    style={{ background: "#4D8B6F", color: "white" }}
+                  >
+                    ✓
+                  </div>
+                  <span className="text-sm text-white leading-snug">{point}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs" style={{ color: "#9CA3AF" }}>
+              Verification takes 1–2 business days
+            </p>
+          </div>
+
+          <div className="flex-1 flex items-start justify-center px-5 sm:px-10 py-14">
+            <div className="w-full max-w-lg">
+              <h2 className="text-xl font-bold mb-1" style={{ color: "#555555" }}>
+                Which landlord profile are you claiming?
+              </h2>
+              <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
+                Search for your name or company to find your RentRadar profile.
+              </p>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search landlord name..."
+                className="w-full px-4 py-3 rounded-[12px] text-sm outline-none mb-3"
+                style={{ background: "#fff", border: "1px solid #E2D9CE", color: "#555555" }}
+              />
+              {searching && (
+                <p className="text-xs mb-3" style={{ color: "#9CA3AF" }}>Searching...</p>
+              )}
+              {searchResults.length > 0 && (
+                <div
+                  className="rounded-[12px] overflow-hidden mb-4"
+                  style={{ border: "1px solid #E2D9CE", background: "#fff" }}
+                >
+                  {searchResults.map((result) => (
+                    <button
+                      key={result.id}
+                      type="button"
+                      onClick={() => selectLandlord(result)}
+                      className="w-full text-left px-4 py-3 transition-colors hover:bg-[#F5F0E8]"
+                      style={{ borderBottom: "1px solid #F5F0E8" }}
+                    >
+                      <p className="text-sm font-semibold" style={{ color: "#555555" }}>{result.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "#9CA3AF" }}>
+                        {result.district} · {result.reviewCount} reviews
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                Can&apos;t find your profile?{" "}
+                <Link href="/search" className="font-semibold" style={{ color: "#4D8B6F" }}>
+                  Search buildings first →
+                </Link>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -124,6 +267,10 @@ export default function LandlordClaimForm({ landlordId, landlordName, claimStatu
   const step3Valid = confirmed;
 
   async function handleSubmit() {
+    if (!user) {
+      setSubmitError("Please sign in with Google before submitting your claim.");
+      return;
+    }
     setSubmitError("");
     setSubmitting(true);
     try {
@@ -132,8 +279,7 @@ export default function LandlordClaimForm({ landlordId, landlordName, claimStatu
       let documentFilename: string | undefined;
 
       if (file) {
-        const buffer = await file.arrayBuffer();
-        documentBase64 = Buffer.from(buffer).toString("base64");
+        documentBase64 = await fileToBase64(file);
         documentMime = file.type;
         documentFilename = file.name;
       }
@@ -275,6 +421,25 @@ export default function LandlordClaimForm({ landlordId, landlordName, claimStatu
                 <p className="text-sm mb-7" style={{ color: "#6B7280" }}>
                   Tell us who you are and which profile you&apos;re claiming.
                 </p>
+
+                {!user && (
+                  <div
+                    className="rounded-[12px] p-4 mb-6"
+                    style={{ background: "#FDE8E3", border: "1px solid #E8573A" }}
+                  >
+                    <p className="text-sm mb-3" style={{ color: "#A83820" }}>
+                      Sign in with Google before submitting so you can access your dashboard after approval.
+                    </p>
+                    <button
+                      type="button"
+                    onClick={handleGoogleSignIn}
+                      className="text-sm font-semibold px-4 py-2 rounded-[10px] text-white"
+                      style={{ background: "#4D8B6F" }}
+                    >
+                      Sign in with Google
+                    </button>
+                  </div>
+                )}
 
                 {/* Claiming card */}
                 <div

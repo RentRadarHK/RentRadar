@@ -851,10 +851,17 @@ export default function LandlordProfile({
 
                 {landlordData.claimStatus === "pending" ? (
                   <>
-                    <p className="text-sm mb-0 leading-relaxed" style={{ color: "#92400E" }}>
+                    <p className="text-sm mb-4 leading-relaxed" style={{ color: "#92400E" }}>
                       A claim has been submitted for this profile and is currently under review.
                     </p>
-                    <p className="text-[11px] mt-2" style={{ color: "#9CA3AF" }}>
+                    <button
+                      disabled
+                      className="w-full font-semibold text-sm py-3 rounded-[12px] mb-2.5 block text-center cursor-not-allowed"
+                      style={{ background: "#E2D9CE", color: "#9CA3AF", border: "2px solid #E2D9CE" }}
+                    >
+                      Claim submitted — under review
+                    </button>
+                    <p className="text-[11px] text-center" style={{ color: "#9CA3AF" }}>
                       Verification takes 1–2 business days.
                     </p>
                   </>

@@ -77,6 +77,8 @@ export interface Review {
   id: string;
   landlordId: string;
   buildingId: string;
+  buildingName?: string;
+  buildingAddress?: string;
   flatRef: string;
   rating: number;
   headline: string;

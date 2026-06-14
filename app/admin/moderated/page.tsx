@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 interface Props {
-  searchParams: { action?: string; property?: string };
+  searchParams: { action?: string; property?: string; type?: string; status?: string };
 }
 
 export const metadata = {
@@ -9,8 +9,30 @@ export const metadata = {
 };
 
 export default function ModeratedPage({ searchParams }: Props) {
-  const { action, property } = searchParams;
-  const approved = action === "approve" || action === "approved";
+  const { action, property, type, status } = searchParams;
+  const isResponse = type === "response";
+  const approved =
+    action === "approve" ||
+    action === "approved" ||
+    status === "approved";
+
+  const heading = isResponse
+    ? approved
+      ? "Response approved"
+      : "Response rejected"
+    : approved
+      ? "Review approved"
+      : "Review rejected";
+
+  const body = isResponse
+    ? approved
+      ? "The landlord response is now live on the review."
+      : "The landlord response has been rejected and will not be published."
+    : approved
+      ? property
+        ? `The review is now live on ${property}.`
+        : "The review is now live on RentRadar."
+      : "The review has been rejected and will not be published.";
 
   return (
     <main
@@ -35,7 +57,6 @@ export default function ModeratedPage({ searchParams }: Props) {
           textAlign: "center",
         }}
       >
-        {/* Icon */}
         <div
           style={{
             width: "64px",
@@ -52,7 +73,6 @@ export default function ModeratedPage({ searchParams }: Props) {
           {approved ? "✓" : "✕"}
         </div>
 
-        {/* Heading */}
         <h1
           style={{
             color: "#111827",
@@ -61,19 +81,13 @@ export default function ModeratedPage({ searchParams }: Props) {
             margin: "0 0 12px",
           }}
         >
-          {approved ? "Review approved" : "Review rejected"}
+          {heading}
         </h1>
 
-        {/* Body */}
         <p style={{ color: "#6B7280", fontSize: "15px", lineHeight: "1.6", margin: "0 0 32px" }}>
-          {approved
-            ? property
-              ? `The review is now live on ${property}.`
-              : "The review is now live on RentRadar."
-            : "The review has been rejected and will not be published."}
+          {body}
         </p>
 
-        {/* Back link */}
         <Link
           href="https://rentradar.co"
           style={{

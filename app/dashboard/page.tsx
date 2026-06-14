@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/");
+  if (!user) redirect("/signup");
 
   const landlord = await getLandlordByUserId(user.id);
   if (!landlord) redirect("/landlord/claim");

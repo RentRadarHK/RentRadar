@@ -30,10 +30,6 @@ function formatDate(iso: string) {
   });
 }
 
-function wordCount(s: string) {
-  return s.trim() ? s.trim().split(/\s+/).length : 0;
-}
-
 export default function LandlordDashboard({ landlord, reviews }: Props) {
   // Profile editing state
   const [bio, setBio] = useState(landlord.bio ?? "");
@@ -222,13 +218,14 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                 <label className="block text-sm font-semibold mb-1.5" style={{ color: "#555555" }}>
                   Bio
                   <span className="ml-1.5 text-xs font-normal" style={{ color: "#9CA3AF" }}>
-                    ({wordCount(bio)}/300 words)
+                    ({bio.length}/500 characters)
                   </span>
                 </label>
                 <textarea
                   value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+                  onChange={(e) => setBio(e.target.value.slice(0, 500))}
                   rows={4}
+                  maxLength={500}
                   placeholder="Tell tenants about yourself and how you manage your properties..."
                   className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none resize-none"
                   style={inputStyle}
@@ -331,9 +328,9 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
             )}
 
             {reviews.map((review) => {
-              const hasResponse = !!review.response || submittedResponses.has(review.id);
-              const isPending   = submittedResponses.has(review.id);
-              const wc = wordCount(responseTexts[review.id] ?? "");
+              const hasApprovedResponse = review.response?.status === "approved";
+              const hasPendingResponse = review.response?.status === "pending" || submittedResponses.has(review.id);
+              const responseLength = (responseTexts[review.id] ?? "").length;
 
               return (
                 <div
@@ -344,6 +341,12 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
                       <StarRating stars={review.rating} />
+                      {review.buildingName && (
+                        <p className="text-xs font-semibold mt-1.5" style={{ color: "#4D8B6F" }}>
+                          {review.buildingName}
+                          {review.buildingAddress ? ` · ${review.buildingAddress}` : ""}
+                        </p>
+                      )}
                       <h3 className="font-bold mt-1.5 text-[15px]" style={{ color: "#555555" }}>
                         {review.headline}
                       </h3>
@@ -381,13 +384,13 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                   )}
 
                   {/* Existing approved response */}
-                  {review.response?.status === "approved" && (
+                  {hasApprovedResponse && review.response && (
                     <div
                       className="mt-3 p-4 rounded-[10px]"
                       style={{ borderLeft: "3px solid #4D8B6F", background: "#F5F0E8" }}
                     >
                       <p className="text-xs font-semibold mb-1" style={{ color: "#4D8B6F" }}>
-                        Your response · {formatDate(review.response.createdAt)}
+                        Your response · Approved · {formatDate(review.response.createdAt)}
                       </p>
                       <p className="text-sm leading-relaxed" style={{ color: "#555555" }}>
                         {review.response.responseText}
@@ -396,19 +399,22 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                   )}
 
                   {/* Pending submitted response */}
-                  {isPending && !review.response && (
+                  {hasPendingResponse && !hasApprovedResponse && (
                     <div
-                      className="mt-3 p-3 rounded-[10px] flex items-center gap-2"
-                      style={{ background: "#FEF9C3", border: "1px solid #FDE68A" }}
+                      className="mt-3 p-4 rounded-[10px]"
+                      style={{ borderLeft: "3px solid #F59E0B", background: "#FFFBEB" }}
                     >
-                      <span className="text-xs" style={{ color: "#92400E" }}>
-                        Response submitted — pending review before publishing
-                      </span>
+                      <p className="text-xs font-semibold mb-1" style={{ color: "#92400E" }}>
+                        Your response · Pending review
+                      </p>
+                      <p className="text-sm leading-relaxed" style={{ color: "#555555" }}>
+                        {review.response?.responseText ?? responseTexts[review.id]}
+                      </p>
                     </div>
                   )}
 
                   {/* Respond button / expand */}
-                  {!hasResponse && respondingTo !== review.id && (
+                  {!hasApprovedResponse && !hasPendingResponse && respondingTo !== review.id && (
                     <button
                       onClick={() => setRespondingTo(review.id)}
                       className="mt-3 flex items-center gap-1.5 text-xs font-semibold transition-colors"
@@ -420,16 +426,17 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                   )}
 
                   {/* Inline response textarea */}
-                  {respondingTo === review.id && !hasResponse && (
+                  {respondingTo === review.id && !hasApprovedResponse && !hasPendingResponse && (
                     <div className="mt-4">
                       <p className="text-[11px] font-semibold mb-2" style={{ color: "#9CA3AF" }}>
                         WRITE YOUR RESPONSE
                       </p>
                       <textarea
                         rows={4}
+                        maxLength={500}
                         value={responseTexts[review.id] ?? ""}
                         onChange={(e) =>
-                          setResponseTexts((prev) => ({ ...prev, [review.id]: e.target.value }))
+                          setResponseTexts((prev) => ({ ...prev, [review.id]: e.target.value.slice(0, 500) }))
                         }
                         placeholder="Write a professional response to this review..."
                         className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none resize-none"
@@ -438,11 +445,11 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                         onBlur={(e) => (e.currentTarget.style.borderColor = "#E2D9CE")}
                       />
                       <div className="flex items-center justify-between mt-1 mb-3">
-                        <p className="text-xs" style={{ color: wc > 300 ? "#E8573A" : "#9CA3AF" }}>
-                          {wc}/300 words
+                        <p className="text-xs" style={{ color: "#9CA3AF" }}>
+                          {responseLength}/500 characters
                         </p>
                         <p className="text-xs" style={{ color: "#9CA3AF" }}>
-                          Responses are reviewed before publishing and are permanent
+                          Responses are permanent and reviewed before publishing
                         </p>
                       </div>
                       {responseErrors[review.id] && (
@@ -460,12 +467,12 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                         </button>
                         <button
                           onClick={() => submitResponse(review.id)}
-                          disabled={submittingResponse || wc === 0 || wc > 300}
+                          disabled={submittingResponse || responseLength === 0}
                           className="text-sm font-semibold px-5 py-2 rounded-[10px] transition-all"
                           style={{
-                            background: submittingResponse || wc === 0 || wc > 300 ? "#D1D5DB" : "#4D8B6F",
+                            background: submittingResponse || responseLength === 0 ? "#D1D5DB" : "#4D8B6F",
                             color: "white",
-                            cursor: submittingResponse || wc === 0 || wc > 300 ? "not-allowed" : "pointer",
+                            cursor: submittingResponse || responseLength === 0 ? "not-allowed" : "pointer",
                           }}
                         >
                           {submittingResponse ? "Submitting..." : "Submit response"}
