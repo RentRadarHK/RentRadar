@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { findOrCreateLandlordProfile } from "@/lib/landlords/find-or-create";
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
   // Look up the review
   const { data: review, error } = await supabase
     .from("reviews")
-    .select("id, moderation_token, building_id, landlord_id, status")
+    .select("id, moderation_token, building_id, landlord_id, landlord_name, status")
     .eq("id", id)
     .single();
 
@@ -64,16 +65,34 @@ export async function GET(req: NextRequest) {
 
   // Recalculate ratings when approved
   if (action === "approve") {
+    let landlordId = review.landlord_id as string | null;
+
+    if (!landlordId && review.landlord_name?.trim()) {
+      try {
+        landlordId = await findOrCreateLandlordProfile(
+          supabase,
+          review.landlord_name.trim(),
+          { buildingId: review.building_id }
+        );
+        await supabase
+          .from("reviews")
+          .update({ landlord_id: landlordId })
+          .eq("id", id);
+      } catch (err) {
+        console.error("Landlord profile backfill on approve failed:", err);
+      }
+    }
+
     if (review.building_id) {
       await supabase.rpc("update_entity_rating", {
         entity_type: "building",
         entity_id: review.building_id,
       });
     }
-    if (review.landlord_id) {
+    if (landlordId) {
       await supabase.rpc("update_entity_rating", {
         entity_type: "landlord",
-        entity_id: review.landlord_id,
+        entity_id: landlordId,
       });
     }
   }
@@ -98,6 +117,8 @@ export async function GET(req: NextRequest) {
         .eq("id", review.landlord_id)
         .single();
       if (ll?.name) dest.searchParams.set("property", ll.name);
+    } else if (review.landlord_name?.trim()) {
+      dest.searchParams.set("property", review.landlord_name.trim());
     }
   }
 

@@ -1315,7 +1315,7 @@ export default function ReviewForm() {
                         Who was your landlord?
                       </p>
                       <p className="text-xs mb-3" style={{ color: "#9CA3AF" }}>
-                        Optional — individual name, company name, or estate agency. Helps us build landlord profiles.
+                        Optional — individual name, company, or agency. A searchable landlord profile is created automatically so they can find and claim it later.
                       </p>
                       <input
                         type="text"

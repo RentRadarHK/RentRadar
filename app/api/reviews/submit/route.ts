@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { sendVerificationEmail, sendModerationEmail } from "@/lib/email/resend";
+import { findOrCreateLandlordProfile } from "@/lib/landlords/find-or-create";
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
@@ -113,6 +114,24 @@ export async function POST(req: NextRequest) {
 
   const supabase = serviceClient();
 
+  // ── Auto-create searchable landlord profile when only a name was provided ───
+  let resolvedLandlordId = body.landlord_id?.trim() || null;
+  const landlordName = body.landlord_name?.trim();
+
+  if (!resolvedLandlordId && landlordName) {
+    try {
+      resolvedLandlordId = await findOrCreateLandlordProfile(supabase, landlordName, {
+        buildingId: body.building_id ?? null,
+      });
+    } catch (err) {
+      console.error("Landlord profile creation failed:", err);
+      return NextResponse.json(
+        { error: "Failed to create landlord profile from name" },
+        { status: 500 }
+      );
+    }
+  }
+
   // ── Document upload ───────────────────────────────────────────────────────
   let documentUrl: string | null = null;
 
@@ -156,7 +175,7 @@ export async function POST(req: NextRequest) {
 
   const reviewRecord = {
     building_id:           body.building_id ?? null,
-    landlord_id:           body.landlord_id ?? null,
+    landlord_id:           resolvedLandlordId,
     tenancy_from:          body.tenancy_from ?? null,
     tenancy_to:            body.tenancy_to ?? null,
     currently_renting:     body.currently_renting ?? false,
@@ -255,11 +274,11 @@ export async function POST(req: NextRequest) {
         .eq("id", body.building_id)
         .single();
       if (bldg) { propertyName = bldg.name; propertyType = "building"; }
-    } else if (body.landlord_id) {
+    } else if (resolvedLandlordId) {
       const { data: ll } = await supabase
         .from("landlords")
         .select("name")
-        .eq("id", body.landlord_id)
+        .eq("id", resolvedLandlordId)
         .single();
       if (ll) { propertyName = ll.name; propertyType = "landlord"; }
     }
@@ -317,10 +336,10 @@ export async function POST(req: NextRequest) {
       entity_id: body.building_id,
     });
   }
-  if (body.landlord_id) {
+  if (resolvedLandlordId) {
     await supabase.rpc("update_entity_rating", {
       entity_type: "landlord",
-      entity_id: body.landlord_id,
+      entity_id: resolvedLandlordId,
     });
   }
 
