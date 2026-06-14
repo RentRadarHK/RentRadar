@@ -36,7 +36,7 @@ export default function Navbar() {
     { label: "How it works", href: "/how-it-works" },
     { label: "Search", href: "/search" },
     { label: "About", href: "/about" },
-    { label: "For Landlords & Agents", href: "/#agents" },
+    { label: "For Landlords", href: "/for-landlords" },
   ];
 
   return (
