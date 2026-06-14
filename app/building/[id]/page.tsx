@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import BuildingProfile from "@/components/BuildingProfile";
 import Footer from "@/components/Footer";
-import { getBuilding, getReviewsForBuilding, getLandlordsForBuilding } from "@/lib/supabase/queries";
+import { getBuilding, getReviewsForBuilding, getLandlordsForBuilding, getLandlordsReferencedInReviews } from "@/lib/supabase/queries";
 
 interface Props {
   params: { id: string };
@@ -18,13 +18,15 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function BuildingPage({ params }: Props) {
-  const [building, reviews, linkedLandlords] = await Promise.all([
-    getBuilding(params.id),
+  const building = await getBuilding(params.id);
+  if (!building) notFound();
+
+  const [reviews, linkedLandlords] = await Promise.all([
     getReviewsForBuilding(params.id),
     getLandlordsForBuilding(params.id),
   ]);
 
-  if (!building) notFound();
+  const landlords = await getLandlordsReferencedInReviews(reviews, linkedLandlords);
 
   return (
     <main>
@@ -32,7 +34,7 @@ export default async function BuildingPage({ params }: Props) {
       <BuildingProfile
         building={building}
         reviews={reviews}
-        linkedLandlords={linkedLandlords}
+        linkedLandlords={landlords}
       />
       <Footer />
     </main>

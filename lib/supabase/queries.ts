@@ -454,6 +454,54 @@ export async function getLandlordsForBuilding(buildingId: string): Promise<Landl
   return (rows as LandlordRow[]).map((row) => mapLandlord(row));
 }
 
+/** Landlords linked to a building plus any referenced in reviews (by id or name). */
+export async function getLandlordsReferencedInReviews(
+  reviews: Review[],
+  existing: Landlord[] = []
+): Promise<Landlord[]> {
+  const byId = new Map(existing.map((l) => [l.id, l]));
+
+  const idsToFetch = new Set<string>();
+  const namesToFetch = new Set<string>();
+
+  for (const r of reviews) {
+    const id = r.landlordId?.trim();
+    if (id && !byId.has(id)) idsToFetch.add(id);
+
+    const name = r.landlordName?.trim();
+    if (name) {
+      const matched = Array.from(byId.values()).some(
+        (l) => l.name.toLowerCase() === name.toLowerCase()
+      );
+      if (!matched && !id) namesToFetch.add(name);
+    }
+  }
+
+  if (idsToFetch.size > 0) {
+    const { data } = await supabase
+      .from("landlords")
+      .select("*")
+      .in("id", Array.from(idsToFetch));
+    for (const row of data ?? []) {
+      byId.set(row.id, mapLandlord(row as LandlordRow));
+    }
+  }
+
+  for (const name of Array.from(namesToFetch)) {
+    const { data } = await supabase
+      .from("landlords")
+      .select("*")
+      .ilike("name", name)
+      .limit(1);
+    const row = data?.[0];
+    if (row && !byId.has(row.id)) {
+      byId.set(row.id, mapLandlord(row as LandlordRow));
+    }
+  }
+
+  return Array.from(byId.values());
+}
+
 export async function getBuildingsForLandlord(landlordId: string): Promise<Building[]> {
   const { data, error } = await supabase
     .from("building_landlords")

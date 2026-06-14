@@ -129,18 +129,38 @@ function formatUnitLabel(review: Review): string | null {
 function resolveLandlordForReview(
   review: Review,
   linkedLandlords: Landlord[]
-): { id?: string; name: string } | null {
-  if (review.landlordId) {
-    const linked = linkedLandlords.find((l) => l.id === review.landlordId);
+): { id?: string; name: string; claimStatus?: string } | null {
+  const id = review.landlordId?.trim();
+
+  if (id) {
+    const linked = linkedLandlords.find((l) => l.id === id);
     return {
-      id: review.landlordId,
+      id,
       name: linked?.name ?? review.landlordName ?? "Landlord",
+      claimStatus: linked?.claimStatus,
     };
   }
-  if (review.landlordName) {
-    return { name: review.landlordName };
+
+  const name = review.landlordName?.trim();
+  if (!name) return null;
+
+  const byName = linkedLandlords.find(
+    (l) => l.name.toLowerCase() === name.toLowerCase()
+  );
+  if (byName) {
+    return {
+      id: byName.id,
+      name: byName.name,
+      claimStatus: byName.claimStatus,
+    };
   }
-  return null;
+
+  return { name };
+}
+
+function landlordClaimHref(landlord: { id?: string; name: string }) {
+  if (landlord.id) return `/landlord/claim?id=${landlord.id}`;
+  return `/landlord/claim?q=${encodeURIComponent(landlord.name)}`;
 }
 
 function buildingScores(review: Review) {
@@ -547,43 +567,50 @@ export default function BuildingProfile({
                 </h2>
                 <div className="flex flex-col gap-3">
                   {linkedLandlords.map((l) => (
-                    <Link
+                    <div
                       key={l.id}
-                      href={`/landlord/${l.id}`}
-                      className="flex items-center justify-between p-4 rounded-xl transition-colors group"
+                      className="p-4 rounded-xl"
                       style={{ background: "#F5F0E8" }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "#EDE8E3")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "#F5F0E8")
-                      }
                     >
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-bold text-[#555555]">{l.name}</p>
-                          {l.verified && (
-                            <span
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                              style={{ background: "#E4F0EB", color: "#1F5C42" }}
-                            >
-                              ✓ Verified
+                      <Link
+                        href={`/landlord/${l.id}`}
+                        className="flex items-center justify-between transition-colors group"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-bold text-[#555555] group-hover:underline">{l.name}</p>
+                            {l.verified && (
+                              <span
+                                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: "#E4F0EB", color: "#1F5C42" }}
+                              >
+                                ✓ Verified
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <StarRating stars={Math.round(l.avgRating)} size={12} />
+                            <span className="text-xs" style={{ color: "#9CA3AF" }}>
+                              {l.avgRating} · {l.totalReviews} reviews
                             </span>
-                          )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <StarRating stars={Math.round(l.avgRating)} size={12} />
-                          <span className="text-xs" style={{ color: "#9CA3AF" }}>
-                            {l.avgRating} · {l.totalReviews} reviews
-                          </span>
-                        </div>
-                      </div>
-                      <ArrowRight
-                        size={15}
-                        className="transition-transform group-hover:translate-x-0.5"
-                        style={{ color: "#4D8B6F" }}
-                      />
-                    </Link>
+                        <ArrowRight
+                          size={15}
+                          className="transition-transform group-hover:translate-x-0.5 shrink-0"
+                          style={{ color: "#4D8B6F" }}
+                        />
+                      </Link>
+                      {l.claimStatus !== "approved" && l.claimStatus !== "pending" && (
+                        <Link
+                          href={`/landlord/claim?id=${l.id}`}
+                          className="text-xs font-semibold mt-3 inline-block hover:underline"
+                          style={{ color: "#4D8B6F" }}
+                        >
+                          Are you this landlord? Claim this profile →
+                        </Link>
+                      )}
+                    </div>
                   ))}
                 </div>
                 <p className="text-xs mt-4" style={{ color: "#9CA3AF" }}>
@@ -749,25 +776,63 @@ export default function BuildingProfile({
                     </div>
 
                     {section === "landlord" && landlord && (
-                      <div
-                        className="flex items-center justify-between gap-3 mb-4 p-3 rounded-xl"
-                        style={{ background: "#F5F0E8" }}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <User size={14} style={{ color: "#9CA3AF" }} className="shrink-0" />
-                          <span className="text-sm font-semibold truncate" style={{ color: "#555555" }}>
-                            {landlord.name}
-                          </span>
+                      <div className="mb-4 flex flex-col gap-3">
+                        <div
+                          className="flex items-center justify-between gap-3 p-3 rounded-xl"
+                          style={{ background: "#F5F0E8" }}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <User size={14} style={{ color: "#9CA3AF" }} className="shrink-0" />
+                            <span className="text-sm font-semibold truncate" style={{ color: "#555555" }}>
+                              {landlord.name}
+                            </span>
+                          </div>
+                          {landlord.id && (
+                            <Link
+                              href={`/landlord/${landlord.id}`}
+                              className="text-xs font-semibold shrink-0 inline-flex items-center gap-1 transition-colors hover:underline"
+                              style={{ color: "#4D8B6F" }}
+                            >
+                              View profile
+                              <ArrowRight size={12} />
+                            </Link>
+                          )}
                         </div>
-                        {landlord.id && (
-                          <Link
-                            href={`/landlord/${landlord.id}`}
-                            className="text-xs font-semibold shrink-0 inline-flex items-center gap-1 transition-colors hover:underline"
-                            style={{ color: "#4D8B6F" }}
+
+                        {landlord.claimStatus !== "approved" && landlord.claimStatus !== "pending" && (
+                          <div
+                            className="p-4 rounded-[14px] border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                            style={{ background: "#fff", borderColor: "#E2D9CE" }}
                           >
-                            View profile
-                            <ArrowRight size={12} />
-                          </Link>
+                            <div>
+                              <p className="text-sm font-bold" style={{ color: "#555555" }}>
+                                Are you {landlord.name}?
+                              </p>
+                              <p className="text-xs mt-1 leading-relaxed" style={{ color: "#6B7280" }}>
+                                {landlord.id
+                                  ? "Claim your profile to respond to this review publicly."
+                                  : "Find your RentRadar profile and claim it to respond to this review."}
+                              </p>
+                            </div>
+                            <Link
+                              href={landlordClaimHref(landlord)}
+                              className="shrink-0 inline-flex items-center justify-center font-semibold text-sm px-5 py-2.5 rounded-full text-white transition-colors"
+                              style={{ background: "#4D8B6F" }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = "#3A7059")}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = "#4D8B6F")}
+                            >
+                              Claim this profile
+                            </Link>
+                          </div>
+                        )}
+
+                        {landlord.claimStatus === "pending" && (
+                          <div
+                            className="p-4 rounded-[14px] text-sm"
+                            style={{ background: "#FEF3C7", border: "1px solid #FDE68A", color: "#92400E" }}
+                          >
+                            A claim for this profile is under review (1–2 business days).
+                          </div>
                         )}
                       </div>
                     )}

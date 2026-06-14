@@ -14,6 +14,7 @@ interface Props {
   landlordId: string;
   landlordName: string | null;
   claimStatus: string | null;
+  initialSearchQuery?: string;
 }
 
 const DOCUMENT_TYPES = [
@@ -28,6 +29,7 @@ export default function LandlordClaimForm({
   landlordId: initialLandlordId,
   landlordName: initialLandlordName,
   claimStatus: initialClaimStatus,
+  initialSearchQuery = "",
 }: Props) {
   const { user } = useAuth();
   const router = useRouter();
@@ -45,6 +47,12 @@ export default function LandlordClaimForm({
     setLandlordName(initialLandlordName);
     setClaimStatus(initialClaimStatus);
   }, [initialLandlordId, initialLandlordName, initialClaimStatus]);
+
+  useEffect(() => {
+    if (!initialLandlordId && initialSearchQuery.trim()) {
+      setSearchQuery(initialSearchQuery.trim());
+    }
+  }, [initialLandlordId, initialSearchQuery]);
 
   useEffect(() => {
     if (searchQuery.trim().length < 2) {

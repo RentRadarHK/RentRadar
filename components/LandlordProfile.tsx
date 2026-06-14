@@ -343,24 +343,54 @@ export default function LandlordProfile({
                 </span>
               </div>
 
-              {/* Verified / Unverified pill */}
-              {landlordDisplay.verified ? (
-                <div
-                  className="inline-flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-full"
-                  style={{ background: "#E4F0EB", border: "1px solid #B0D4C3", color: "#1F5C42" }}
-                >
-                  <Shield size={12} />
-                  <span><strong>Verified Landlord</strong> · Identity confirmed by RentRadar</span>
-                </div>
-              ) : (
-                <div
-                  className="inline-flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-full"
-                  style={{ background: "#FDE8E3", border: "1px solid #F5C4B3", color: "#A83820" }}
-                >
-                  <Lock size={12} />
-                  <span><strong>Unverified Profile</strong> · This profile has not been claimed by the landlord</span>
-                </div>
-              )}
+              {/* Verified / Unverified + claim CTA */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
+                {landlordDisplay.verified || landlordData.claimStatus === "approved" ? (
+                  <div
+                    className="inline-flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-full"
+                    style={{ background: "#E4F0EB", border: "1px solid #B0D4C3", color: "#1F5C42" }}
+                  >
+                    <Shield size={12} />
+                    <span><strong>Verified Landlord</strong> · Identity confirmed by RentRadar</span>
+                  </div>
+                ) : landlordData.claimStatus === "pending" ? (
+                  <>
+                    <div
+                      className="inline-flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-full"
+                      style={{ background: "#FEF3C7", border: "1px solid #FDE68A", color: "#92400E" }}
+                    >
+                      <Lock size={12} />
+                      <span><strong>Claim under review</strong> · Verification takes 1–2 business days</span>
+                    </div>
+                    <button
+                      disabled
+                      className="inline-flex items-center font-semibold text-sm px-5 py-2.5 rounded-full cursor-not-allowed"
+                      style={{ background: "#E2D9CE", color: "#9CA3AF" }}
+                    >
+                      Claim submitted — under review
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className="inline-flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-full"
+                      style={{ background: "#FDE8E3", border: "1px solid #F5C4B3", color: "#A83820" }}
+                    >
+                      <Lock size={12} />
+                      <span><strong>Unverified Profile</strong> · Not yet claimed by the landlord</span>
+                    </div>
+                    <Link
+                      href={`/landlord/claim?id=${landlordData.id}`}
+                      className="inline-flex items-center font-semibold text-sm px-5 py-2.5 rounded-full text-white transition-colors"
+                      style={{ background: "#4D8B6F" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#3A7059")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "#4D8B6F")}
+                    >
+                      Claim this profile
+                    </Link>
+                  </>
+                )}
+              </div>
             </motion.div>
 
             {/* ── 3. Rating Breakdown ── */}

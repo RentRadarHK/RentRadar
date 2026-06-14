@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 export const metadata = { title: "Claim Your Landlord Profile — RentRadar" };
 
 interface Props {
-  searchParams: { id?: string };
+  searchParams: { id?: string; q?: string };
 }
 
 export default async function ClaimPage({ searchParams }: Props) {
@@ -19,6 +19,7 @@ export default async function ClaimPage({ searchParams }: Props) {
         landlordId={landlordId}
         landlordName={landlord?.name ?? null}
         claimStatus={landlord?.claimStatus ?? null}
+        initialSearchQuery={searchParams.q ?? ""}
       />
     </main>
   );
