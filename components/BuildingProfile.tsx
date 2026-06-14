@@ -579,7 +579,7 @@ export default function BuildingProfile({
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <p className="text-sm font-bold text-[#555555] group-hover:underline">{l.name}</p>
-                            {l.verified && (
+                            {l.claimStatus === "approved" && (
                               <span
                                 className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                                 style={{ background: "#E4F0EB", color: "#1F5C42" }}

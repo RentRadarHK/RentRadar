@@ -298,7 +298,7 @@ function toLandlordSearchResult(l: Landlord): SearchResult {
     market: l.activeMarkets[0] ?? "Hong Kong",
     rating: l.avgRating,
     reviewCount: l.totalReviews,
-    badge: l.verified ? "Verified" : undefined,
+    badge: l.claimStatus === "approved" ? "Verified" : undefined,
     govDataAvailable: false,
   };
 }
@@ -625,7 +625,7 @@ export async function searchAll(
     market: (l.active_markets ?? [])[0] ?? "Hong Kong",
     rating: Number(l.avg_rating),
     reviewCount: l.total_reviews,
-    badge: l.verified ? "Verified" : undefined,
+    badge: l.claim_status === "approved" ? "Verified" : undefined,
     govDataAvailable: false,
   }));
 

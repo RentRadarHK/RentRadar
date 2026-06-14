@@ -208,6 +208,8 @@ export default function LandlordProfile({
     );
   }
 
+  const isClaimed = landlordData.claimStatus === "approved";
+
   const landlordDisplay = {
     name: landlordData.name,
     address: primaryAddress ?? landlordData.name,
@@ -215,7 +217,7 @@ export default function LandlordProfile({
     reviewCount: landlordData.totalReviews,
     memberSince: parseInt(landlordData.activeSince, 10) || 2019,
     market: landlordData.activeMarkets[0] ?? "Hong Kong",
-    verified: landlordData.verified,
+    verified: isClaimed,
     propertiesListed: landlordData.totalProperties,
   };
 
@@ -343,9 +345,9 @@ export default function LandlordProfile({
                 </span>
               </div>
 
-              {/* Verified / Unverified + claim CTA */}
+              {/* Claim status + CTA — only claim_status gates claiming, not the legacy verified flag */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
-                {landlordDisplay.verified || landlordData.claimStatus === "approved" ? (
+                {landlordData.claimStatus === "approved" ? (
                   <div
                     className="inline-flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-full"
                     style={{ background: "#E4F0EB", border: "1px solid #B0D4C3", color: "#1F5C42" }}
@@ -377,7 +379,7 @@ export default function LandlordProfile({
                       style={{ background: "#FDE8E3", border: "1px solid #F5C4B3", color: "#A83820" }}
                     >
                       <Lock size={12} />
-                      <span><strong>Unverified Profile</strong> · Not yet claimed by the landlord</span>
+                      <span><strong>Unclaimed profile</strong> · Any landlord can claim this page</span>
                     </div>
                     <Link
                       href={`/landlord/claim?id=${landlordData.id}`}
@@ -702,7 +704,7 @@ export default function LandlordProfile({
                           <span className="text-xs font-semibold" style={{ color: "#4D8B6F" }}>
                             Response from landlord
                           </span>
-                          {landlordDisplay.verified && (
+                          {isClaimed && (
                             <span
                               className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
                               style={{ background: "#E4F0EB", color: "#1F5C42" }}
@@ -898,8 +900,8 @@ export default function LandlordProfile({
                 ) : (
                   <>
                     <p className="text-sm text-[#6B7280] mb-5 leading-relaxed">
-                      Claim your profile to respond to reviews, add property details, and earn your{" "}
-                      <strong className="text-[#555555]">Verified Landlord</strong> badge.
+                      Claim your profile to respond to reviews, add contact details, and earn your{" "}
+                      <strong className="text-[#555555]">Verified Landlord</strong> badge after review.
                     </p>
                     <Link
                       href={`/landlord/claim?id=${landlordData.id}`}
@@ -917,7 +919,7 @@ export default function LandlordProfile({
                       Claim This Profile
                     </Link>
                     <p className="text-[11px] text-center" style={{ color: "#9CA3AF" }}>
-                      Free to claim. Verification required.
+                      Free to claim. No subscription required.
                     </p>
                   </>
                 )}

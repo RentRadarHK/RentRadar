@@ -159,7 +159,7 @@ export default function LandlordDashboard({ landlord, reviews }: Props) {
                 <h1 className="text-3xl font-extrabold" style={{ color: "#555555" }}>
                   Welcome, {landlord.name}
                 </h1>
-                {landlord.verified && (
+                {landlord.claimStatus === "approved" && (
                   <span
                     className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                     style={{ background: "#E4F0EB", color: "#1F5C42", border: "1px solid #B0D4C3" }}

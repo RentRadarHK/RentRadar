@@ -512,7 +512,7 @@ export default function ReviewForm() {
             market: l.activeMarkets[0] ?? "Hong Kong",
             rating: l.avgRating,
             reviewCount: l.totalReviews,
-            badge: l.verified ? "Verified" : undefined,
+            badge: l.claimStatus === "approved" ? "Verified" : undefined,
           });
         }
       });
