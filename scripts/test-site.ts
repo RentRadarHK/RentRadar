@@ -61,7 +61,6 @@ function attachListeners(page: Page) {
     const url = res.url();
     if (status === 404 || status >= 500) {
       if (url.includes("favicon") || url.includes("_next/image")) return;
-      if (url.includes("/sign-in")) return; // reported separately
       httpErrors.push({ url, status });
     }
   });
@@ -149,7 +148,7 @@ async function runTests(browser: Browser): Promise<void> {
     await waitForFonts(page);
     const hasOutfit = await page.evaluate(async () => {
       await document.fonts.ready;
-      return [...document.fonts].some((f) => /outfit/i.test(f.family));
+      return Array.from(document.fonts).some((f) => /outfit/i.test(f.family));
     });
     if (!hasOutfit) {
       throw new Error("document.fonts does not include Outfit");

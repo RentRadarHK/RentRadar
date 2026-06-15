@@ -156,13 +156,9 @@ export default function SignUpPage() {
             </h2>
             <p className="text-sm mb-7" style={{ color: "#6B7280" }}>
               Already have an account?{" "}
-              <button
-                onClick={() => setSignInOpen(true)}
-                className="font-semibold transition-colors"
-                style={{ color: "#4D8B6F" }}
-              >
+              <Link href="/sign-in" className="font-semibold" style={{ color: "#4D8B6F" }}>
                 Sign in
-              </button>
+              </Link>
             </p>
 
             {/* Social */}
