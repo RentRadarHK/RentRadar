@@ -12,6 +12,7 @@ const footerHrefs: Record<string, string> = {
   "Write a Review": "/review",
   About: "/about",
   "How it works": "/how-it-works",
+  "Terms of Service": "/terms",
 };
 
 export default function Footer() {
