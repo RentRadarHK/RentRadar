@@ -19,7 +19,6 @@ import {
   Calendar,
   Layers,
   Hash,
-  Lock,
   PenLine,
   User,
 } from "lucide-react";
@@ -713,7 +712,7 @@ export default function BuildingProfile({
                       : "No reviews match this filter."}
                   </p>
                 )}
-                {visibleReviews.slice(0, 1).map((review, i) => {
+                {visibleReviews.map((review, i) => {
                   const section = reviewSection[review.id] ?? "building";
                   const expandKey = `${review.id}-${section}`;
                   const landlord = resolveLandlordForReview(review, linkedLandlords);
@@ -1006,55 +1005,7 @@ export default function BuildingProfile({
                   );
                 })}
 
-                {/* Subscription gate */}
-                {reviewCount > 1 && (
-                  <div
-                    className="rounded-[16px] p-8 text-center"
-                    style={{ background: "#E4F0EB", border: "1px solid #4D8B6F" }}
-                  >
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
-                      style={{ background: "#E4F0EB" }}
-                    >
-                      <Lock size={20} style={{ color: "#4D8B6F" }} />
-                    </div>
-                    <h3 className="font-bold text-[#555555] text-lg mb-2">
-                      Read all {reviewCount} reviews
-                    </h3>
-                    <p className="text-sm text-[#6B7280] mb-6 max-w-xs mx-auto leading-relaxed">
-                      Subscribe to access every review for this building and every other property on RentRadar.
-                    </p>
-                    <Link
-                      href="/pricing"
-                      className="inline-flex items-center gap-2 font-bold text-sm px-7 py-3.5 rounded-[12px] text-white transition-colors"
-                      style={{ background: "#4D8B6F" }}
-                      onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#3A7059")}
-                      onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.background = "#4D8B6F")}
-                    >
-                      HKD 29/month — Get access
-                    </Link>
-                  </div>
-                )}
               </div>
-
-              {reviewCount > 3 && (
-                <div className="mt-7 flex justify-center">
-                  <button
-                    className="text-sm font-semibold px-8 py-3 rounded-[12px] transition-all duration-200"
-                    style={{ border: "2px solid #555555", color: "#555555", background: "transparent" }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "#555555";
-                      (e.currentTarget as HTMLButtonElement).style.color = "#fff";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                      (e.currentTarget as HTMLButtonElement).style.color = "#555555";
-                    }}
-                  >
-                    Load more reviews
-                  </button>
-                </div>
-              )}
             </motion.div>
 
             {/* ── Write a Review CTA ── */}

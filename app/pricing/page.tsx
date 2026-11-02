@@ -5,8 +5,8 @@ import Footer from "@/components/Footer";
 import PricingPage from "@/components/PricingPage";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Pricing | RentRadar",
-  description: "Full access to verified tenant reviews and building data in Hong Kong. HKD 29/month.",
+  title: "Reviews are free | RentRadar",
+  description: "Tenant reviews on RentRadar are free to read. Rental listings will be charged later, once buildings have enough reviews.",
   path: "/pricing",
 });
 
