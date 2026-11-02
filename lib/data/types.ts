@@ -26,6 +26,8 @@ export interface Building {
   avgRating: number;
   totalReviews: number;
   description: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface RedFlag {

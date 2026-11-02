@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Claim Approved — RentRadar" };
+export const metadata = pageMetadata({
+  title: "Claim approved | RentRadar",
+  description: "Your RentRadar landlord claim has been approved.",
+  path: "/admin/claim-approved",
+});
 
 export default function ClaimApprovedPage() {
   return (

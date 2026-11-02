@@ -1,13 +1,15 @@
 import { Suspense } from "react";
+import { pageMetadata } from "@/lib/seo";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ReviewForm from "@/components/ReviewForm";
 
-export const metadata = {
-  title: "Write a Review — RentRadar",
+export const metadata = pageMetadata({
+  title: "Write a review | RentRadar",
   description:
     "Share your experience as a tenant. Your review helps protect future renters and rewards great landlords.",
-};
+  path: "/review",
+});
 
 export default function ReviewPage() {
   return (

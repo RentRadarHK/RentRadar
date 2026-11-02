@@ -1,11 +1,16 @@
 import { redirect } from "next/navigation";
+import { pageMetadata } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { getLandlordByUserId, getReviewsForLandlord } from "@/lib/supabase/queries";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LandlordDashboard from "@/components/LandlordDashboard";
 
-export const metadata = { title: "Landlord Dashboard — RentRadar" };
+export const metadata = pageMetadata({
+  title: "Landlord dashboard | RentRadar",
+  description: "Manage your RentRadar landlord profile and respond to tenant reviews.",
+  path: "/dashboard",
+});
 
 export default async function DashboardPage() {
   const supabase = await createClient();

@@ -1,13 +1,15 @@
 ﻿import { Suspense } from "react";
+import { pageMetadata } from "@/lib/seo";
 import Navbar from "@/components/Navbar";
 import SearchResults from "@/components/SearchResults";
 import Footer from "@/components/Footer";
 
-export const metadata = {
-  title: "Search Landlords & Buildings — RentRadar",
+export const metadata = pageMetadata({
+  title: "Search landlords and buildings | RentRadar",
   description:
     "Search verified tenant reviews for landlords and buildings across Hong Kong and Singapore.",
-};
+  path: "/search",
+});
 
 function SearchFallback() {
   return (

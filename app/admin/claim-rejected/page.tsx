@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Claim Rejected — RentRadar" };
+export const metadata = pageMetadata({
+  title: "Claim rejected | RentRadar",
+  description: "Your RentRadar landlord claim was not approved.",
+  path: "/admin/claim-rejected",
+});
 
 export default function ClaimRejectedPage() {
   return (

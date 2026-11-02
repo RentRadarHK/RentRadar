@@ -1,13 +1,15 @@
 import fs from "fs";
 import path from "path";
+import { pageMetadata } from "@/lib/seo";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TermsPage from "@/components/TermsPage";
 
-export const metadata = {
-  title: "Terms of Service — RentRadar",
+export const metadata = pageMetadata({
+  title: "Terms of Service | RentRadar",
   description: "Terms and Conditions for using RentRadar.co, operated by RentRadar Limited.",
-};
+  path: "/terms",
+});
 
 function loadTermsHtml(): string {
   const filePath = path.join(process.cwd(), "content", "terms.html");

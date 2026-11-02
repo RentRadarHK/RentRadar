@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 
 interface Props {
   searchParams: { action?: string; property?: string; type?: string; status?: string };
 }
 
-export const metadata = {
-  title: "Review Moderated — RentRadar",
-};
+export const metadata = pageMetadata({
+  title: "Review moderated | RentRadar",
+  description: "This RentRadar review has been moderated.",
+  path: "/admin/moderated",
+});
 
 export default function ModeratedPage({ searchParams }: Props) {
   const { action, property, type, status } = searchParams;

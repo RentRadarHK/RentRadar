@@ -1,8 +1,13 @@
+import { pageMetadata } from "@/lib/seo";
 import { getLandlord } from "@/lib/supabase/queries";
 import LandlordClaimForm from "@/components/LandlordClaimForm";
 import Navbar from "@/components/Navbar";
 
-export const metadata = { title: "Claim Your Landlord Profile — RentRadar" };
+export const metadata = pageMetadata({
+  title: "Claim your landlord profile | RentRadar",
+  description: "Claim your RentRadar landlord profile and start responding to tenant reviews.",
+  path: "/landlord/claim",
+});
 
 interface Props {
   searchParams: { id?: string; q?: string };

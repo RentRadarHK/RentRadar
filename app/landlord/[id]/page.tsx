@@ -1,20 +1,23 @@
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import LandlordProfile from "@/components/LandlordProfile";
 import Footer from "@/components/Footer";
 import { getLandlord, getBuildingsForLandlord, getReviewsForLandlord } from "@/lib/supabase/queries";
+import { pageMetadata } from "@/lib/seo";
 
 interface Props {
   params: { id: string };
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const landlord = await getLandlord(params.id);
-  return {
-    title: landlord ? `${landlord.name} — RentRadar` : "Landlord Profile — RentRadar",
+  return pageMetadata({
+    title: landlord ? `${landlord.name} | Tenant Reviews | RentRadar` : "Landlord profile | RentRadar",
     description: landlord
       ? `Read verified tenant reviews for ${landlord.name}. See ratings for deposit return, responsiveness, maintenance and more.`
       : "Verified tenant reviews on RentRadar.",
-  };
+    path: `/landlord/${params.id}`,
+  });
 }
 
 export default async function LandlordPage({ params }: Props) {

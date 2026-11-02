@@ -30,6 +30,8 @@ interface BuildingRow {
   total_reviews: number;
   gov_data_last_updated: string;
   description: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   statutory_orders?: StatutoryOrderRow[];
   building_landlords?: { landlord_id: string }[];
 }
@@ -140,6 +142,8 @@ function mapBuilding(row: BuildingRow): Building {
     blockId: row.block_id,
     govDataLastUpdated: row.gov_data_last_updated,
     description: row.description ?? null,
+    latitude: row.latitude ?? null,
+    longitude: row.longitude ?? null,
     statutoryOrders: (row.statutory_orders ?? []).map(mapStatutoryOrder),
     landlords: (row.building_landlords ?? []).map((bl) => bl.landlord_id),
     avgRating: Number(row.avg_rating),
