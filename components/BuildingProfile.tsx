@@ -29,6 +29,7 @@ import { formatTenancyDetailsLine } from "@/lib/format-review";
 // ReviewResponse is on the Review type via review.response
 import GovDataBadge from "./GovDataBadge";
 import PriceGuide, { PriceGuideRegion } from "./PriceGuide";
+import BuildingMap from "./BuildingMap";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -469,6 +470,12 @@ export default function BuildingProfile({
                 </div>
               </div>
             </motion.div>
+
+            <BuildingMap
+              latitude={building.latitude}
+              longitude={building.longitude}
+              name={building.name}
+            />
 
             {/* ── Statutory Orders Card ── */}
             <motion.div
