@@ -98,6 +98,7 @@ interface ModerationEmailParams {
   tenancyTo?: number;
   currentlyRenting?: boolean;
   monthlyRent?: number;
+  flatSizeSqft?: number;
   verifiedTenant: boolean;
   verificationMethod: string;
   reviewerEmail?: string;
@@ -105,6 +106,15 @@ interface ModerationEmailParams {
 
 function stars(n: number): string {
   return "★".repeat(n) + "☆".repeat(5 - n);
+}
+
+function formatRentPaidEmail(monthlyRent: number, flatSizeSqft?: number): string {
+  const rent = `HKD ${Math.round(monthlyRent).toLocaleString("en-HK")}/month`;
+  if (flatSizeSqft && flatSizeSqft > 0) {
+    const perSqFt = Math.round(monthlyRent / flatSizeSqft);
+    return `${rent} (HKD ${perSqFt.toLocaleString("en-HK")}/sq ft)`;
+  }
+  return rent;
 }
 
 function row(label: string, value: string): string {
@@ -147,7 +157,8 @@ export async function sendModerationEmail(params: ModerationEmailParams) {
           <tbody>
             ${row("Property", params.propertyName + (params.propertyType === "building" ? " (Building)" : " (Landlord)"))}
             ${row("Tenancy", tenancyStr)}
-            ${params.monthlyRent ? row("Rent paid", `HKD ${params.monthlyRent.toLocaleString()}/month`) : ""}
+            ${params.monthlyRent ? row("Rent paid", formatRentPaidEmail(params.monthlyRent, params.flatSizeSqft)) : ""}
+            ${params.flatSizeSqft ? row("Saleable area", `${params.flatSizeSqft.toLocaleString("en-HK")} sq ft`) : ""}
             ${row("Verified tenant", params.verifiedTenant ? "Yes" : "No")}
             ${row("Verification", params.verificationMethod)}
             ${params.reviewerEmail ? row("Reviewer email", params.reviewerEmail) : ""}

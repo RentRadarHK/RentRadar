@@ -317,6 +317,7 @@ export async function POST(req: NextRequest) {
       tenancyTo:                      body.tenancy_to,
       currentlyRenting:               body.currently_renting,
       monthlyRent:                    body.monthly_rent,
+      flatSizeSqft:                   body.flat_size_sqft,
       verifiedTenant:                 body.verification_method === "google",
       verificationMethod:             body.verification_method,
       reviewerEmail:                  user?.email ?? body.verification_email,

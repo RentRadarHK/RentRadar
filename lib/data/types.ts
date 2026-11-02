@@ -89,6 +89,8 @@ export interface Review {
   unitType?: string;
   floorNumber?: string;
   unitNumber?: string;
+  monthlyRent?: number;
+  flatSizeSqft?: number;
   buildingDayToDay?: string;
   buildingIssues?: string;
   flatDayToDay?: string;

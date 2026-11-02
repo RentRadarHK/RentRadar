@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Building, Landlord, Review } from "@/lib/data/types";
+import { formatTenancyDetailsLine } from "@/lib/format-review";
 // ReviewResponse is on the Review type via review.response
 import GovDataBadge from "./GovDataBadge";
 import PriceGuide, { PriceGuideRegion } from "./PriceGuide";
@@ -108,22 +109,7 @@ function filterReviews(list: Review[], filter: ReviewFilter): Review[] {
 type ReviewSection = "building" | "flat" | "landlord";
 
 function formatUnitLabel(review: Review): string | null {
-  const parts = [
-    review.unitType === "studio"
-      ? "Studio"
-      : review.unitType === "1bed"
-        ? "1 bed"
-        : review.unitType === "2bed"
-          ? "2 bed"
-          : review.unitType === "3bed"
-            ? "3 bed"
-            : review.unitType === "4bed+"
-              ? "4 bed+"
-              : review.unitType,
-    review.floorNumber,
-    review.unitNumber ? `Unit ${review.unitNumber}` : undefined,
-  ].filter(Boolean);
-  return parts.length > 0 ? parts.join(" · ") : null;
+  return formatTenancyDetailsLine(review);
 }
 
 function resolveLandlordForReview(

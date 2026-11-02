@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Building, Landlord, Review, ReviewResponse } from "@/lib/data/types";
+import { formatTenancyDetailsLine } from "@/lib/format-review";
 import GovDataBadge from "./GovDataBadge";
 import PriceGuide, { PriceGuideRegion } from "./PriceGuide";
 
@@ -32,6 +33,7 @@ interface LocalReview {
   location: string;
   timeAgo: string;
   category: string;
+  tenancyLine?: string | null;
   depositReturn?: number;
   landlordResponsiveness?: number;
   wouldRentAgain?: number;
@@ -74,6 +76,7 @@ function toLocalReview(r: Review, index: number): LocalReview {
     location: r.district,
     timeAgo: relativeTime(r.datePosted),
     category: deriveCategory(r),
+    tenancyLine: formatTenancyDetailsLine(r),
     depositReturn:          r.dimensions.depositReturn || undefined,
     landlordResponsiveness: r.dimensions.landlordResponsiveness || undefined,
     wouldRentAgain:         r.dimensions.wouldRentAgain || undefined,
@@ -598,6 +601,11 @@ export default function LandlordProfile({
                       <h3 className="font-bold text-[#555555] mt-2 text-[15px] leading-snug">
                         {review.headline}
                       </h3>
+                      {review.tenancyLine && (
+                        <p className="text-xs mt-1.5" style={{ color: "#9CA3AF" }}>
+                          {review.tenancyLine}
+                        </p>
+                      )}
                     </div>
 
                     <div

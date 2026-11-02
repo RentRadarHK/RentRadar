@@ -98,6 +98,8 @@ interface ReviewRow {
   unit_type: string | null;
   floor_number: string | null;
   unit_number: string | null;
+  monthly_rent: number | null;
+  flat_size_sqft: number | null;
   // Guided review fields
   building_day_to_day: string | null;
   building_issues: string | null;
@@ -238,6 +240,8 @@ function mapReview(row: ReviewRow): Review {
     unitType: row.unit_type ?? undefined,
     floorNumber: row.floor_number ?? undefined,
     unitNumber: row.unit_number ?? undefined,
+    monthlyRent: row.monthly_rent ?? undefined,
+    flatSizeSqft: row.flat_size_sqft ?? undefined,
     buildingDayToDay: row.building_day_to_day ?? undefined,
     buildingIssues: row.building_issues ?? undefined,
     flatDayToDay: row.flat_day_to_day ?? undefined,
